@@ -95,7 +95,6 @@
       font-size: 11px;
       font-weight: 700;
       color: #93c5fd;
-      text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
@@ -191,7 +190,6 @@
       text-align: left;
       font-size: 11px;
       font-weight: 700;
-      text-transform: uppercase;
       letter-spacing: 0.07em;
       color: var(--text-muted);
       background: var(--surface-solid);
@@ -419,7 +417,7 @@
           res = await apiFetch('/api/representative/state', { method: 'GET' });
           if (!res.ok) { showState('auth'); return; }
           const data = await res.json();
-          roleBadge.textContent = 'Representative';
+          roleBadge.textContent = 'REPRESENTATIVE';
           roleBadge.style.color = '#a3e635';
           roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
           roleBadge.style.background = 'rgba(163,230,53,0.1)';
@@ -435,7 +433,7 @@
           // Admin
           role = 'admin';
           const data = await res.json();
-          roleBadge.textContent = 'Admin';
+          roleBadge.textContent = 'ADMIN';
           const assignments = data.assignments || [];
           // Group by rep name then sort
           const sorted = [...assignments].sort((a, b) =>

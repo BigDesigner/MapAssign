@@ -581,7 +581,7 @@ class AppController {
 
             li.innerHTML = `
               <span style="font-weight: 500;">${c.name}</span>
-              <span style="font-size: 11px; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${c.code}</span>
+              <span style="font-size: 11px; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px;">${c.code.toUpperCase()}</span>
             `;
 
             // Hover interactions to highlight path/group
