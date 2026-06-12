@@ -1,0 +1,21 @@
+{
+  "name": "map-assign-project",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "hash-password": "ts-node scripts/hash-password.ts",
+    "backend:dev": "wrangler dev",
+    "backend:deploy": "wrangler deploy",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.57.1"
+  }
+}

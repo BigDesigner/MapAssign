@@ -1,0 +1,20 @@
+name = "map-assign-api"
+main = "backend/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+# In production, define these using "wrangler secret put" or the Cloudflare Dashboard
+ADMIN_USERNAME = "admin"
+ALLOWED_ORIGIN = "http://localhost:5173"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+# You must create this namespace using: wrangler kv:namespace create SESSIONS
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "map-assign-db"
+# You must create this database using: wrangler d1 create map-assign-db
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

@@ -1,0 +1,21 @@
+{
+  "name": "map-assign-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "clsx": "^2.1.1",
+    "jspdf": "^2.5.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}

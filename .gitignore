@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Local Wrangler / Cloudflare files (contains local D1 databases, SQLite binaries, and logs)
+.wrangler/
+.dev.vars
+
+# Production builds
+dist/
+frontend/dist/
+
+# Env & Secrets (never commit)
+.env
+.env.*
+.env.local
+.dev.vars.local
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
