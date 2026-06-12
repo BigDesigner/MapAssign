@@ -14,9 +14,10 @@
 - [x] Tablo sayfası (`table.html`) — admin + temsilci için
 - [x] CSV indirme özelliği
 - [x] Docs klasörü (agent.md, guardrails.md, task.md, architecture.md)
+- [x] Sayfa yenilemede oturum koruma (`GET /api/auth/me` session restore)
+- [x] Menüler ve tooltipler kaybolma bug'ının çözülmesi (Eksik DOM ID'lerinden kaynaklanan TypeError çökmesi giderildi)
 
 ## 🔄 Devam Eden / Bekleyen
-- [ ] Paneller kaybolma bug'ı araştırması (sidebar CSS çakışması)
 - [ ] Cloudflare Pages Web Analytics beacon CORS uyarısı (Cloudflare tarafı, bizim kontrolümüzde değil)
 
 ## 📋 Gelecek Görevler (Backlog)

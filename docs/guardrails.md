@@ -14,6 +14,7 @@
 - ❌ `pointer-events: none` kaldırmadan sidebar'a yeni mutlak konumlu eleman ekleme — harita tıklamalarını bozar
 - ❌ `main.ts` dışında API çağrısı yapmama — tüm fetch işlemleri `apiFetch()` üzerinden geçmeli (credentials)
 - ❌ `table.html`'i `index.html`'e gömme — ayrı page olarak kalmalı (session cookie her ikisi için çalışır)
+- ❌ `index.html` içerisindeki kontrol paneli (`#control-panel`) elementlerinin DOM ID'lerini (`role-title`, `user-display`, `admin-controls`) kaldırma veya değiştirme — `main.ts` içerisinde arayüz başlatılması (`bootstrapApp`) için zorunludur ve kaldırılması tüm uygulamanın çökmesine neden olur.
 
 ## Backend
 

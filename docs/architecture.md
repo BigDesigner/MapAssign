@@ -25,6 +25,7 @@
 │  ┌───────────────────────────────────┐  │
 │  │           index.ts (Router)       │  │
 │  │  POST /api/auth/login             │  │
+│  │  GET  /api/auth/me                │  │
 │  │  POST /api/auth/logout            │  │
 │  │  GET  /api/map/state (admin)      │  │
 │  │  GET  /api/representative/state   │  │

@@ -39,6 +39,7 @@ MapAssign/
 | Method | Path | Auth | Açıklama |
 |---|---|---|---|
 | POST | /api/auth/login | — | Admin veya temsilci girişi |
+| GET | /api/auth/me | Session | Oturum bilgilerini döndürür (sayfa yenilemede session restore için) |
 | POST | /api/auth/logout | Session | Oturumu sonlandırır |
 | GET | /api/map/state | Admin | Tüm atamalar |
 | GET | /api/representative/state | Rep | Kendi atanmış ülkeleri |
