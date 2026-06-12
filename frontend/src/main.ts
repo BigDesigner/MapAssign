@@ -768,10 +768,12 @@ class AppController {
         const assignedCodes = new Set(assignedToThisRep.map(a => a.country_code.toLowerCase()));
         this.adminAddCountrySelect.innerHTML = '<option value="">-- Ülke Seçin --</option>';
         
-        const allCountries = Object.keys(COUNTRY_NAMES).map(code => ({
-          code,
-          name: COUNTRY_NAMES[code]
-        }));
+        const allCountries = Object.keys(COUNTRY_NAMES)
+          .filter(code => code !== 'gb')
+          .map(code => ({
+            code,
+            name: COUNTRY_NAMES[code]
+          }));
         allCountries.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 
         allCountries.forEach(c => {

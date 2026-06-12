@@ -60,18 +60,21 @@ export class MapEngine {
   }
 
   private getCountryInfo(targetElement: SVGElement): { code: string; element: SVGElement } | null {
-    // Check if the element is inside a country group <g id="XX">
-    const parentGroup = targetElement.closest('g');
-    if (parentGroup) {
-      const id = parentGroup.id || parentGroup.getAttribute('id') || '';
-      if (id && id.length === 2) {
-        return { code: id.toUpperCase(), element: parentGroup };
+    // Check if the element or any of its parent groups is a country or province group
+    let currentElement: SVGElement | null = targetElement;
+    while (currentElement) {
+      if (currentElement.tagName.toLowerCase() === 'g') {
+        const id = currentElement.id || currentElement.getAttribute('id') || '';
+        if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+          return { code: id.toUpperCase(), element: currentElement };
+        }
       }
+      currentElement = currentElement.parentElement as SVGElement | null;
     }
 
     // Fallback: check the element itself
     const id = targetElement.id || targetElement.getAttribute('id') || '';
-    if (id && (id.length === 2 || id === '_somaliland')) {
+    if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
       return { code: id.toUpperCase(), element: targetElement };
     }
 

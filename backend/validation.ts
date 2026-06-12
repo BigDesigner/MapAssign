@@ -1,5 +1,6 @@
 export function isValidCountryCode(code: string): boolean {
-  return /^[a-zA-Z]{2}$/.test(code);
+  const c = code.toLowerCase();
+  return /^[a-z]{2}$/.test(c) || /^gb-[a-z]{3}$/.test(c) || c === '_somaliland';
 }
 
 export function isValidColorHex(hex: string): boolean {
