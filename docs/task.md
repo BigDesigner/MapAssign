@@ -27,3 +27,10 @@
 - [ ] Mobil görünüm iyileştirmeleri (responsive panel davranışı)
 - [ ] Dark/Light mode toggle
 - [ ] Atama geçmişi (audit log)
+
+### 🇹🇷 Türkiye Haritası & Türkçe Dil Desteği Entegrasyonu
+- [ ] Veritabanında `scope` (world/turkey) alanlarının tanımlanması ve migrasyonu
+- [ ] Kapsam bazlı temsilci ve atama API'lerinin güncellenmesi
+- [ ] Türkiye illerini içeren `turkey.svg` haritasının ve `cityNames.ts` dosyasının eklenmesi
+- [ ] Arayüzde Dünya/Türkiye geçiş özelliğinin ve dinamik Türkçe/İngilizce dil motorunun kurulması
+
