@@ -11,12 +11,26 @@ export interface Env {
   ALLOWED_ORIGIN?: string;
 }
 
+function getAllowedOrigins(env: Env): string[] {
+  const defaults = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://map.akansu.com',
+    'https://mapassign.pages.dev'
+  ];
+  if (env.ALLOWED_ORIGIN) {
+    const dynamics = env.ALLOWED_ORIGIN.split(',').map(o => o.trim());
+    return [...defaults, ...dynamics];
+  }
+  return defaults;
+}
+
 function corsHeaders(request: Request, env: Env): Headers {
   const headers = new Headers();
   const origin = request.headers.get('Origin');
-  const allowed = env.ALLOWED_ORIGIN || '*';
+  const allowedOrigins = getAllowedOrigins(env);
   
-  if (origin && (allowed === '*' || allowed === origin)) {
+  if (origin && allowedOrigins.includes(origin)) {
     headers.set('Access-Control-Allow-Origin', origin);
   }
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -76,11 +90,14 @@ export default {
         return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429, headers);
       }
 
-      // CSRF Protection: Verify Origin/Referer for POST requests
+      // CSRF Protection: Verify Origin/Referer for POST requests against allowed origins list
       const origin = request.headers.get('Origin') || request.headers.get('Referer');
-      const allowed = env.ALLOWED_ORIGIN;
-      if (allowed && origin && !origin.startsWith(allowed)) {
-        return jsonResponse({ error: 'CSRF validation failed: Origin not allowed.' }, 403, headers);
+      const allowedOrigins = getAllowedOrigins(env);
+      if (origin) {
+        const isValid = allowedOrigins.some(allowed => origin.startsWith(allowed));
+        if (!isValid) {
+          return jsonResponse({ error: 'CSRF validation failed: Origin not allowed.' }, 403, headers);
+        }
       }
     }
 
