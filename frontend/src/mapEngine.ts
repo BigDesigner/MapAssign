@@ -11,7 +11,7 @@ export class MapEngine {
   private svg: SVGSVGElement;
   private container: HTMLElement;
   private role: 'admin' | 'representative';
-  private onCountryClick?: (countryCode: string, targetPath: SVGPathElement) => void;
+  private onCountryClick?: (countryCode: string, targetPath: SVGElement) => void;
 
   // ViewBox State
   private vbX = 30.767;
@@ -34,7 +34,7 @@ export class MapEngine {
     svg: SVGSVGElement,
     container: HTMLElement,
     role: 'admin' | 'representative',
-    onCountryClick?: (countryCode: string, targetPath: SVGPathElement) => void
+    onCountryClick?: (countryCode: string, targetPath: SVGElement) => void
   ) {
     this.svg = svg;
     this.container = container;
@@ -57,6 +57,25 @@ export class MapEngine {
     }
 
     this.initEvents();
+  }
+
+  private getCountryInfo(pathElement: SVGPathElement): { code: string; element: SVGElement } | null {
+    let code = pathElement.id || pathElement.getAttribute('id') || '';
+    let element: SVGElement = pathElement;
+
+    // Check parent group if path doesn't have ID
+    if (!code && pathElement.parentElement) {
+      const parent = pathElement.parentElement;
+      if (parent.tagName.toLowerCase() === 'g') {
+        code = parent.id || parent.getAttribute('id') || '';
+        element = parent as unknown as SVGElement;
+      }
+    }
+
+    if (code && (!code.startsWith('_') || code === '_somaliland')) {
+      return { code: code.toUpperCase(), element };
+    }
+    return null;
   }
 
   private initTooltip(): void {
@@ -85,10 +104,11 @@ export class MapEngine {
       const target = e.target as SVGElement;
       const pathElement = target.closest('path');
       if (pathElement) {
-        const countryCode = (pathElement.id || pathElement.getAttribute('id'))?.toUpperCase();
-        if (countryCode && !countryCode.startsWith('_')) {
-          const countryName = COUNTRY_NAMES[countryCode.toLowerCase()] || countryCode;
-          const assignment = this.assignmentsMap.get(countryCode);
+        const countryInfo = this.getCountryInfo(pathElement);
+        if (countryInfo) {
+          const { code } = countryInfo;
+          const countryName = COUNTRY_NAMES[code.toLowerCase()] || code;
+          const assignment = this.assignmentsMap.get(code);
           
           let content = `<div style="font-weight: 700; font-size: 14px;">${countryName}</div>`;
           if (assignment) {
@@ -223,9 +243,9 @@ export class MapEngine {
       const pathElement = target.closest('path');
       
       if (pathElement) {
-        const countryCode = pathElement.id || pathElement.getAttribute('id');
-        if (countryCode && !countryCode.startsWith('_') && this.onCountryClick) {
-          this.onCountryClick(countryCode.toUpperCase(), pathElement);
+        const countryInfo = this.getCountryInfo(pathElement);
+        if (countryInfo && this.onCountryClick) {
+          this.onCountryClick(countryInfo.code, countryInfo.element);
         }
       }
     });

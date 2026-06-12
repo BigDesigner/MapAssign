@@ -1,5 +1,6 @@
 import { MapEngine, CountryAssignment } from './mapEngine';
 import { exportMapToPDF } from './pdfExport';
+import { COUNTRY_NAMES } from './countryNames';
 
 // State Interfaces
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -28,6 +29,18 @@ class AppController {
   private selectedCountryCode = '';
 
   // Elements
+  private repControls = document.getElementById('rep-controls') as HTMLElement;
+  private toggleChangePassBtn = document.getElementById('toggle-change-pass-btn') as HTMLButtonElement;
+  private changePassContainer = document.getElementById('change-pass-container') as HTMLElement;
+  private changePassForm = document.getElementById('change-pass-form') as HTMLFormElement;
+
+  private repCountriesPanel = document.getElementById('rep-countries-panel') as HTMLElement;
+  private repCountriesHeader = document.getElementById('rep-countries-header') as HTMLElement;
+  private repCountriesBody = document.getElementById('rep-countries-body') as HTMLElement;
+  private repCountriesIcon = document.getElementById('rep-countries-icon') as HTMLElement;
+  private repCountriesCount = document.getElementById('rep-countries-count') as HTMLElement;
+  private repCountriesList = document.getElementById('rep-countries-list') as HTMLUListElement;
+
   private loginScreen = document.getElementById('login-screen') as HTMLElement;
   private loginForm = document.getElementById('login-form') as HTMLFormElement;
   private usernameInput = document.getElementById('username') as HTMLInputElement;
@@ -98,7 +111,56 @@ class AppController {
       this.controlPanel.style.display = 'none';
       this.assignPanel.classList.remove('active');
       this.repsCrudPanel.style.display = 'none';
+      this.repControls.style.display = 'none';
+      this.changePassContainer.style.display = 'none';
+      this.repCountriesPanel.style.display = 'none';
+      this.changePassForm.reset();
       document.getElementById('map-container')?.classList.remove('admin-mode');
+    });
+
+    // Toggle Change Password
+    this.toggleChangePassBtn.addEventListener('click', () => {
+      const isHidden = this.changePassContainer.style.display === 'none';
+      this.changePassContainer.style.display = isHidden ? 'block' : 'none';
+    });
+
+    // Submit Password Change
+    this.changePassForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const oldPassword = (document.getElementById('old-pass') as HTMLInputElement).value;
+      const newPassword = (document.getElementById('new-pass') as HTMLInputElement).value;
+
+      try {
+        const res = await apiFetch('/api/representative/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oldPassword, newPassword })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('Password updated successfully.');
+          this.changePassForm.reset();
+          this.changePassContainer.style.display = 'none';
+        } else {
+          alert(data.error || 'Failed to change password.');
+        }
+      } catch (err) {
+        console.error('Password change error:', err);
+        alert('Server connection error.');
+      }
+    });
+
+    // Toggle Assigned Countries Panel
+    this.repCountriesHeader.addEventListener('click', () => {
+      const isHidden = this.repCountriesBody.style.display === 'none';
+      if (isHidden) {
+        this.repCountriesBody.style.display = 'block';
+        this.repCountriesIcon.style.transform = 'rotate(0deg)';
+      } else {
+        this.repCountriesBody.style.display = 'none';
+        this.repCountriesIcon.style.transform = 'rotate(-90deg)';
+      }
     });
 
     // Handle Close Assign Panel
@@ -236,6 +298,8 @@ class AppController {
       this.roleTitle.textContent = 'Admin Mode';
       this.userDisplay.textContent = this.currentUsernameOrName;
       this.adminControls.style.display = 'block';
+      this.repControls.style.display = 'none';
+      this.repCountriesPanel.style.display = 'none';
       
       // Initialize map with admin click callback
       this.mapEngine = new MapEngine(svg, container, 'admin', (code, path) => {
@@ -252,6 +316,7 @@ class AppController {
       this.roleTitle.textContent = 'Representative';
       this.userDisplay.textContent = this.currentUsernameOrName;
       this.adminControls.style.display = 'none';
+      this.repControls.style.display = 'block';
       
       this.mapEngine = new MapEngine(svg, container, 'representative');
       this.controlPanel.style.display = 'block';
@@ -310,6 +375,107 @@ class AppController {
           name: data.name
         }));
         this.mapEngine.updateColors(assignments);
+
+        // Sort and display assigned countries panel
+        if (data.assignedCountries && data.assignedCountries.length > 0) {
+          this.repCountriesPanel.style.display = 'block';
+          this.repCountriesCount.textContent = data.assignedCountries.length.toString();
+
+          const mappedCountries = data.assignedCountries.map((code: string) => {
+            const lowerCode = code.toLowerCase();
+            const fullName = COUNTRY_NAMES[lowerCode] || code.toUpperCase();
+            return { code: lowerCode, name: fullName };
+          });
+
+          // Sort alphabetically by full name, using Turkish locale collation
+          mappedCountries.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr'));
+
+          this.repCountriesList.innerHTML = '';
+          mappedCountries.forEach((c: any) => {
+            const li = document.createElement('li');
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.style.alignItems = 'center';
+            li.style.padding = '6px 8px';
+            li.style.borderRadius = '6px';
+            li.style.background = 'rgba(255, 255, 255, 0.02)';
+            li.style.border = '1px solid rgba(255, 255, 255, 0.03)';
+            li.style.cursor = 'pointer';
+            li.style.transition = 'background 0.2s ease, border-color 0.2s ease';
+
+            li.innerHTML = `
+              <span style="font-weight: 500;">${c.name}</span>
+              <span style="font-size: 11px; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">${c.code}</span>
+            `;
+
+            // Hover interactions to highlight path/group
+            li.addEventListener('mouseenter', () => {
+              li.style.background = 'rgba(255, 255, 255, 0.05)';
+              li.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+              const el = document.getElementById(c.code) as SVGElement | null;
+              if (el) {
+                if (el.tagName.toLowerCase() === 'path') {
+                  (el as SVGPathElement).style.stroke = '#ffffff';
+                  (el as SVGPathElement).style.strokeWidth = '1.5px';
+                } else {
+                  const subpaths = el.querySelectorAll('path');
+                  subpaths.forEach(p => {
+                    p.style.stroke = '#ffffff';
+                    p.style.strokeWidth = '1.5px';
+                  });
+                }
+              }
+            });
+
+            li.addEventListener('mouseleave', () => {
+              li.style.background = 'rgba(255, 255, 255, 0.02)';
+              li.style.borderColor = 'rgba(255, 255, 255, 0.03)';
+              const el = document.getElementById(c.code) as SVGElement | null;
+              if (el) {
+                if (el.tagName.toLowerCase() === 'path') {
+                  (el as SVGPathElement).style.stroke = '#334155';
+                  (el as SVGPathElement).style.strokeWidth = '0.5px';
+                } else {
+                  const subpaths = el.querySelectorAll('path');
+                  subpaths.forEach(p => {
+                    p.style.stroke = '#334155';
+                    p.style.strokeWidth = '0.5px';
+                  });
+                }
+              }
+            });
+
+            // Click interaction to pulse path/group
+            li.addEventListener('click', () => {
+              const el = document.getElementById(c.code) as SVGElement | null;
+              if (el && this.mapEngine) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Pulse effect
+                let count = 0;
+                const pathsToPulse = el.tagName.toLowerCase() === 'path' ? [el as SVGPathElement] : Array.from(el.querySelectorAll('path'));
+                const originalFills = pathsToPulse.map(p => p.style.fill || '');
+
+                const interval = setInterval(() => {
+                  pathsToPulse.forEach((p, idx) => {
+                    p.style.fill = count % 2 === 0 ? '#ffffff' : originalFills[idx];
+                  });
+                  count++;
+                  if (count > 5) {
+                    clearInterval(interval);
+                    pathsToPulse.forEach((p, idx) => {
+                      p.style.fill = originalFills[idx];
+                    });
+                  }
+                }, 200);
+              }
+            });
+
+            this.repCountriesList.appendChild(li);
+          });
+        } else {
+          this.repCountriesPanel.style.display = 'none';
+        }
       }
     } catch (err) {
       console.error('Load rep map state error:', err);
@@ -376,19 +542,26 @@ class AppController {
     });
   }
 
-  private async openAssignPanel(countryCode: string, path: SVGPathElement): Promise<void> {
+  private async openAssignPanel(countryCode: string, path: SVGElement): Promise<void> {
     this.selectedCountryCode = countryCode;
     
-    // Get country name/display title
-    const countryName = path.getAttribute('name') || path.getAttribute('title') || countryCode;
+    // Get country name/display title from COUNTRY_NAMES mapping
+    const countryName = COUNTRY_NAMES[countryCode.toLowerCase()] || countryCode;
     this.countryTitle.textContent = `${countryName} (${countryCode})`;
 
-    // Check currently assigned representative by checking style fill
-    const fillHex = path.style.fill;
+    // Check currently assigned representative by checking style fill (check group child path if needed)
+    let fillHex = '';
+    if (path.tagName.toLowerCase() === 'path') {
+      fillHex = (path as SVGPathElement).style.fill;
+    } else {
+      const firstPath = path.querySelector('path');
+      if (firstPath) {
+        fillHex = firstPath.style.fill;
+      }
+    }
     
     if (fillHex) {
-      // Find representative by color match (fallback to DB query in production is safer, but quick visual match works)
-      // Convert fill color (rgb or hex) to hex for matching
+      // Find representative by color match
       const hex = this.rgbToHex(fillHex) || fillHex;
       const matchedRep = this.representatives.find(r => r.color_hex.toLowerCase() === hex.toLowerCase());
       if (matchedRep) {

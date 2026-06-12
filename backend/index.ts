@@ -1,4 +1,4 @@
-import { verifyAdminPassword, verifyPassword } from './auth';
+import { verifyAdminPassword, verifyPassword, hashPassword } from './auth';
 import { createSession, getSession, destroySession, SessionData } from './session';
 import { isRateLimited } from './rateLimit';
 import { isValidCountryCode, isValidColorHex, sanitizeInput } from './validation';
@@ -207,6 +207,46 @@ export default {
           colorHex: repDetails.color_hex,
           assignedCountries: countryCodes
         }, 200, headers);
+      }
+
+      // 4.1 POST /api/representative/change-password
+      if (url.pathname === '/api/representative/change-password' && request.method === 'POST') {
+        if (session.role !== 'representative' || !session.id) {
+          return jsonResponse({ error: 'Forbidden. Representative role required.' }, 403, headers);
+        }
+
+        const body: any = await request.json();
+        const { oldPassword, newPassword } = body;
+
+        if (!oldPassword || !newPassword) {
+          return jsonResponse({ error: 'Old and new passwords are required.' }, 400, headers);
+        }
+
+        // Fetch representative details to verify old password
+        const rep = await env.DB.prepare(
+          'SELECT password_hash FROM representatives WHERE id = ?'
+        )
+          .bind(session.id)
+          .first<{ password_hash: string }>();
+
+        if (!rep) {
+          return jsonResponse({ error: 'Representative not found.' }, 404, headers);
+        }
+
+        const isValid = await verifyPassword(oldPassword, rep.password_hash);
+        if (!isValid) {
+          return jsonResponse({ error: 'Incorrect old password.' }, 400, headers);
+        }
+
+        const newHash = await hashPassword(newPassword);
+
+        await env.DB.prepare(
+          'UPDATE representatives SET password_hash = ? WHERE id = ?'
+        )
+          .bind(newHash, session.id)
+          .run();
+
+        return jsonResponse({ success: true, message: 'Password changed successfully.' }, 200, headers);
       }
 
       // 5. POST /api/admin/assign

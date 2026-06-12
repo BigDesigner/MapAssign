@@ -268,6 +268,26 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    #rep-countries-panel {
+      bottom: 24px;
+      left: 16px;
+      width: 280px;
+    }
+
+    #rep-countries-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    #rep-countries-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #rep-countries-body::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+    #rep-countries-body::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
     /* Responsive adjustments */
     @media (max-width: 640px) {
       .overlay-panel {
@@ -289,6 +309,12 @@
       }
       #control-panel {
         top: 80px;
+      }
+      #rep-countries-panel {
+        width: calc(100vw - 32px);
+        left: 16px !important;
+        bottom: auto !important;
+        top: 240px;
       }
     }
   </style>
@@ -338,8 +364,43 @@
         </div>
       </div>
 
+      <!-- Representative Controls -->
+      <div id="rep-controls" style="display: none;">
+        <div class="form-group">
+          <button id="toggle-change-pass-btn" class="secondary">Change Password</button>
+        </div>
+        <div id="change-pass-container" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+          <form id="change-pass-form">
+            <div class="form-group">
+              <label for="old-pass">Old Password</label>
+              <input type="password" id="old-pass" required placeholder="••••••••">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="new-pass">New Password</label>
+              <input type="password" id="new-pass" required placeholder="••••••••">
+            </div>
+            <button type="submit" style="background: var(--accent-color);">Update Password</button>
+          </form>
+        </div>
+      </div>
+
       <div class="form-group">
         <button id="logout-btn" class="secondary" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.2);">Log Out</button>
+      </div>
+    </div>
+
+    <!-- Representative Assigned Countries Panel -->
+    <div id="rep-countries-panel" class="overlay-panel" style="display: none;">
+      <div id="rep-countries-header" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+        <h3 style="font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin: 0;">
+          <svg id="rep-countries-icon" style="width: 16px; height: 16px; transition: transform 0.2s ease; transform: rotate(0deg);" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path></svg>
+          Assigned Countries (<span id="rep-countries-count">0</span>)
+        </h3>
+      </div>
+      <div id="rep-countries-body" style="margin-top: 12px; max-height: 200px; overflow-y: auto;">
+        <ul id="rep-countries-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px;">
+          <!-- Dynamic countries list -->
+        </ul>
       </div>
     </div>
 
