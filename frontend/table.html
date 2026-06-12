@@ -302,16 +302,16 @@
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
-        Haritaya Dön
+        Back to Map
       </a>
-      <h1>Atama Tablosu</h1>
+      <h1>Assignment Table</h1>
       <span id="role-badge">—</span>
     </div>
     <button id="csv-btn">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
       </svg>
-      CSV İndir
+      Download CSV
     </button>
   </header>
 
@@ -321,7 +321,7 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
       </svg>
-      <input type="text" id="search-input" placeholder="Temsilci veya ülke ara...">
+      <input type="text" id="search-input" placeholder="Search representative or country...">
     </div>
     <div class="toolbar-right">
       <span id="row-count">—</span>
@@ -333,13 +333,13 @@
     <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
     </svg>
-    <p>Oturum bulunamadı. Lütfen <a href="/" style="color:var(--accent)">giriş yapın</a>.</p>
+    <p>Session not found. Please <a href="/" style="color:var(--accent)">log in</a>.</p>
   </div>
 
   <!-- Loading state -->
   <div id="loading-state" class="visible">
     <div class="spinner"></div>
-    <p>Veriler yükleniyor…</p>
+    <p>Loading data...</p>
   </div>
 
   <!-- Empty state -->
@@ -347,7 +347,7 @@
     <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"/>
     </svg>
-    <p>Arama kriterine uyan kayıt bulunamadı.</p>
+    <p>No records found matching search criteria.</p>
   </div>
 
   <!-- Table -->
@@ -356,9 +356,9 @@
       <thead>
         <tr>
           <th data-col="no">No</th>
-          <th data-col="rep" class="sort-asc">Temsilci Adı</th>
-          <th data-col="code">Ülke Kodu</th>
-          <th data-col="name">Ülke Adı</th>
+          <th data-col="rep" class="sort-asc">Representative Name</th>
+          <th data-col="code">Country Code</th>
+          <th data-col="name">Country Name</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -366,53 +366,7 @@
   </div>
 
   <script type="module">
-    // ── Country name map (ISO → display name) ──
-    const COUNTRY_NAMES = {
-      'af':'Afganistan','al':'Arnavutluk','dz':'Cezayir','ad':'Andorra','ao':'Angola',
-      'ag':'Antigua ve Barbuda','ar':'Arjantin','am':'Ermenistan','au':'Avustralya',
-      'at':'Avusturya','az':'Azerbaycan','bs':'Bahamalar','bh':'Bahreyn','bd':'Bangladeş',
-      'bb':'Barbados','by':'Belarus','be':'Belçika','bz':'Belize','bj':'Benin',
-      'bt':'Bhutan','bo':'Bolivya','ba':'Bosna-Hersek','bw':'Botsvana','br':'Brezilya',
-      'bn':'Brunei','bg':'Bulgaristan','bf':'Burkina Faso','bi':'Burundi','cv':'Cabo Verde',
-      'kh':'Kamboçya','cm':'Kamerun','ca':'Kanada','cf':'Orta Afrika Cumhuriyeti',
-      'td':'Çad','cl':'Şili','cn':'Çin','co':'Kolombiya','km':'Komorlar','cd':'Kongo (DRK)',
-      'cg':'Kongo','cr':'Kosta Rika','ci':'Fildişi Sahili','hr':'Hırvatistan','cu':'Küba',
-      'cy':'Kıbrıs','cz':'Çek Cumhuriyeti','dk':'Danimarka','dj':'Cibuti','dm':'Dominika',
-      'do':'Dominik Cumhuriyeti','ec':'Ekvador','eg':'Mısır','sv':'El Salvador',
-      'gq':'Ekvator Ginesi','er':'Eritre','ee':'Estonya','sz':'Esvatini','et':'Etiyopya',
-      'fj':'Fiji','fi':'Finlandiya','fr':'Fransa','ga':'Gabon','gm':'Gambiya',
-      'ge':'Gürcistan','de':'Almanya','gh':'Gana','gr':'Yunanistan','gd':'Grenada',
-      'gt':'Guatemala','gn':'Gine','gw':'Gine-Bissau','gy':'Guyana','ht':'Haiti',
-      'hn':'Honduras','hu':'Macaristan','is':'İzlanda','in':'Hindistan','id':'Endonezya',
-      'ir':'İran','iq':'Irak','ie':'İrlanda','il':'İsrail','it':'İtalya','jm':'Jamaika',
-      'jp':'Japonya','jo':'Ürdün','kz':'Kazakistan','ke':'Kenya','ki':'Kiribati',
-      'kp':'Kuzey Kore','kr':'Güney Kore','kw':'Kuveyt','kg':'Kırgızistan','la':'Laos',
-      'lv':'Letonya','lb':'Lübnan','ls':'Lesotho','lr':'Liberya','ly':'Libya',
-      'li':'Lihtenştayn','lt':'Litvanya','lu':'Lüksemburg','mg':'Madagaskar','mw':'Malavi',
-      'my':'Malezya','mv':'Maldivler','ml':'Mali','mt':'Malta','mh':'Marshall Adaları',
-      'mr':'Moritanya','mu':'Mauritius','mx':'Meksika','fm':'Mikronezya','md':'Moldova',
-      'mc':'Monako','mn':'Moğolistan','me':'Karadağ','ma':'Fas','mz':'Mozambik',
-      'mm':'Myanmar','na':'Namibya','nr':'Nauru','np':'Nepal','nl':'Hollanda',
-      'nz':'Yeni Zelanda','ni':'Nikaragua','ne':'Nijer','ng':'Nijerya','mk':'Kuzey Makedonya',
-      'no':'Norveç','om':'Umman','pk':'Pakistan','pw':'Palau','pa':'Panama',
-      'pg':'Papua Yeni Gine','py':'Paraguay','pe':'Peru','ph':'Filipinler','pl':'Polonya',
-      'pt':'Portekiz','qa':'Katar','ro':'Romanya','ru':'Rusya','rw':'Ruanda',
-      'kn':'Saint Kitts ve Nevis','lc':'Saint Lucia','vc':'Saint Vincent','ws':'Samoa',
-      'sm':'San Marino','st':'Sao Tome ve Principe','sa':'Suudi Arabistan','sn':'Senegal',
-      'rs':'Sırbistan','sc':'Seyşeller','sl':'Sierra Leone','sg':'Singapur','sk':'Slovakya',
-      'si':'Slovenya','sb':'Solomon Adaları','so':'Somali','za':'Güney Afrika',
-      'ss':'Güney Sudan','es':'İspanya','lk':'Sri Lanka','sd':'Sudan','sr':'Surinam',
-      'se':'İsveç','ch':'İsviçre','sy':'Suriye','tw':'Tayvan','tj':'Tacikistan',
-      'tz':'Tanzanya','th':'Tayland','tl':'Doğu Timor','tg':'Togo','to':'Tonga',
-      'tt':'Trinidad ve Tobago','tn':'Tunus','tr':'Türkiye','tm':'Türkmenistan',
-      'tv':'Tuvalu','ug':'Uganda','ua':'Ukrayna','ae':'Birleşik Arap Emirlikleri',
-      'gb':'Birleşik Krallık','us':'Amerika Birleşik Devletleri','uy':'Uruguay',
-      'uz':'Özbekistan','vu':'Vanuatu','ve':'Venezuela','vn':'Vietnam','ye':'Yemen',
-      'zm':'Zambiya','zw':'Zimbabwe',
-      // Extra codes in SVG
-      '_somaliland':'Somaliland','fk':'Falkland Adaları','nc':'Yeni Kaledonya',
-      'gl':'Grönland','pr':'Porto Riko','cu':'Küba','bs':'Bahamalar',
-    };
+    import { COUNTRY_NAMES } from './src/countryNames.ts';
 
     const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
       ? '' : 'https://map-api.akansu.com';
@@ -465,7 +419,7 @@
           res = await apiFetch('/api/representative/state', { method: 'GET' });
           if (!res.ok) { showState('auth'); return; }
           const data = await res.json();
-          roleBadge.textContent = 'Temsilci';
+          roleBadge.textContent = 'Representative';
           roleBadge.style.color = '#a3e635';
           roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
           roleBadge.style.background = 'rgba(163,230,53,0.1)';
@@ -485,9 +439,9 @@
           const assignments = data.assignments || [];
           // Group by rep name then sort
           const sorted = [...assignments].sort((a, b) =>
-            String(a.name).localeCompare(String(b.name), 'tr') ||
+            String(a.name).localeCompare(String(b.name), 'en') ||
             String(COUNTRY_NAMES[a.country_code] || a.country_code).localeCompare(
-              COUNTRY_NAMES[b.country_code] || b.country_code, 'tr')
+              COUNTRY_NAMES[b.country_code] || b.country_code, 'en')
           );
           allRows = sorted.map((row, i) => ({
             no: i + 1,
@@ -524,14 +478,14 @@
         const va = sortCol === 'no' ? a.no : String(a[sortCol]);
         const vb = sortCol === 'no' ? b.no : String(b[sortCol]);
         if (sortCol === 'no') return sortDir * (va - vb);
-        return sortDir * va.localeCompare(vb, 'tr');
+        return sortDir * va.localeCompare(vb, 'en');
       });
       renderTable();
     }
 
     // ── Render ──
     function renderTable() {
-      rowCount.textContent = `${filtered.length} kayıt`;
+      rowCount.textContent = `${filtered.length} records`;
 
       if (!filtered.length) {
         if (allRows.length === 0) {
@@ -568,7 +522,7 @@
     // ── CSV Export ──
     csvBtn.addEventListener('click', () => {
       if (!filtered.length) return;
-      const header = ['No', 'Temsilci Adı', 'Ülke Kodu', 'Ülke Adı'];
+      const header = ['No', 'Representative Name', 'Country Code', 'Country Name'];
       const rows = filtered.map((r, i) => [
         i + 1,
         `"${r.rep.replace(/"/g,'""')}"`,
@@ -580,7 +534,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `atamalar_${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `assignments_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     });
