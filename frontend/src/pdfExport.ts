@@ -1,4 +1,7 @@
-import { jsPDF } from 'jspdf';
+export interface LegendItem {
+  name: string;
+  color_hex: string;
+}
 
 export function sanitizeSVG(svgClone: SVGSVGElement): void {
   // 1. Remove any script tags
@@ -32,12 +35,7 @@ export function sanitizeSVG(svgClone: SVGSVGElement): void {
   });
 }
 
-export interface LegendItem {
-  name: string;
-  color_hex: string;
-}
-
-export function exportMapToPDF(svgElement: SVGSVGElement, legendItems: LegendItem[] = []): Promise<void> {
+export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendItem[] = []): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // Clone the SVG element so we don't modify the active DOM
@@ -72,7 +70,7 @@ export function exportMapToPDF(svgElement: SVGSVGElement, legendItems: LegendIte
           const ctx = canvas.getContext('2d');
           if (!ctx) {
             URL.revokeObjectURL(url);
-            reject(new Error('Could not get 2D context for canvas PDF rendering.'));
+            reject(new Error('Could not get 2D context for canvas PNG rendering.'));
             return;
           }
 
@@ -156,16 +154,11 @@ export function exportMapToPDF(svgElement: SVGSVGElement, legendItems: LegendIte
             });
           }
           
-          // Generate PDF using jsPDF
-          const pdf = new jsPDF({
-            orientation: width > height ? 'landscape' : 'portrait',
-            unit: 'px',
-            format: [width, height + legendAreaHeight]
-          });
-          
           const imgData = canvas.toDataURL('image/png');
-          pdf.addImage(imgData, 'PNG', 0, 0, width, height + legendAreaHeight);
-          pdf.save('map_snapshot.pdf');
+          const link = document.createElement('a');
+          link.download = 'map_snapshot.png';
+          link.href = imgData;
+          link.click();
           
           URL.revokeObjectURL(url);
           resolve();
@@ -177,7 +170,7 @@ export function exportMapToPDF(svgElement: SVGSVGElement, legendItems: LegendIte
       
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        reject(new Error('Failed to load SVG into image element for PDF conversion.'));
+        reject(new Error('Failed to load SVG into image element for PNG conversion.'));
       };
       
       img.src = url;

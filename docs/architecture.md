@@ -82,7 +82,7 @@ Kullanıcı → POST /api/auth/login
 index.html
 └── AppController (main.ts)
     ├── MapEngine (mapEngine.ts)      # SVG pan/zoom, renk
-    ├── exportMapToPDF (pdfExport.ts) # html2canvas + jsPDF
+    ├── exportMapToPNG (pdfExport.ts) # Canvas-based PNG export
     └── COUNTRY_NAMES (countryNames.ts)
 
 table.html (standalone, vanilla JS)

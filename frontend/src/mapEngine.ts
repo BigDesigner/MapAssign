@@ -98,157 +98,195 @@ export class MapEngine {
     document.body.appendChild(this.tooltip);
   }
 
+  private handlePointerOver = (e: PointerEvent) => {
+    const target = e.target as SVGElement;
+    const pathElement = target.closest('path');
+    if (pathElement) {
+      const countryInfo = this.getCountryInfo(pathElement);
+      if (countryInfo) {
+        const { code } = countryInfo;
+        const countryName = COUNTRY_NAMES[code.toLowerCase()] || code;
+        const assignment = this.assignmentsMap.get(code);
+        
+        let content = `<div style="font-weight: 700; font-size: 14px;">${countryName}</div>`;
+        if (assignment) {
+          content += `<div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8;">
+            <span class="color-swatch" style="background-color: ${assignment.color_hex}; width: 10px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid rgba(255,255,255,0.2); margin-right: 0;"></span>
+            <span>${assignment.name}</span>
+          </div>`;
+        } else {
+          content += `<div style="margin-top: 4px; font-size: 12px; color: #64748b;">Unassigned</div>`;
+        }
+        
+        this.tooltip.innerHTML = content;
+        this.tooltip.style.display = 'block';
+        this.tooltip.offsetHeight; // force reflow
+        this.tooltip.style.opacity = '1';
+      }
+    }
+  };
+
+  private handlePointerMove = (e: PointerEvent) => {
+    if (this.tooltip.style.display === 'block') {
+      const tooltipWidth = this.tooltip.clientWidth;
+      const tooltipHeight = this.tooltip.clientHeight;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      let left = e.clientX + 15;
+      let top = e.clientY + 15;
+
+      // Prevent tooltip from going off the right side
+      if (left + tooltipWidth > viewportWidth) {
+        left = e.clientX - tooltipWidth - 15;
+      }
+
+      // Prevent tooltip from going off the bottom
+      if (top + tooltipHeight > viewportHeight) {
+        top = e.clientY - tooltipHeight - 15;
+      }
+
+      this.tooltip.style.left = `${left}px`;
+      this.tooltip.style.top = `${top}px`;
+    }
+  };
+
+  private handlePointerOut = (e: PointerEvent) => {
+    const target = e.target as SVGElement;
+    const pathElement = target.closest('path');
+    if (pathElement) {
+      this.tooltip.style.opacity = '0';
+      this.tooltip.style.display = 'none';
+    }
+  };
+
+  private handlePointerDown = (e: PointerEvent) => {
+    this.activePointers.set(e.pointerId, e);
+    
+    if (this.activePointers.size === 1) {
+      this.isPointerDown = true;
+      this.pointerOrigin.x = e.clientX;
+      this.pointerOrigin.y = e.clientY;
+      this.viewBoxOrigin.x = this.vbX;
+      this.viewBoxOrigin.y = this.vbY;
+    } else if (this.activePointers.size === 2) {
+      // Prepare pinch-to-zoom
+      const pointers = Array.from(this.activePointers.values());
+      this.lastPinchDistance = this.getDistance(pointers[0], pointers[1]);
+    }
+    this.container.setPointerCapture(e.pointerId);
+  };
+
+  private handlePointerMoveContainer = (e: PointerEvent) => {
+    if (!this.activePointers.has(e.pointerId)) return;
+    this.activePointers.set(e.pointerId, e);
+
+    if (this.activePointers.size === 1 && this.isPointerDown) {
+      // Pan
+      const dx = e.clientX - this.pointerOrigin.x;
+      const dy = e.clientY - this.pointerOrigin.y;
+      
+      // Scale panning speed based on ratio between SVG viewBox width and container element width
+      const scaleX = this.vbW / this.container.clientWidth;
+      const scaleY = this.vbH / this.container.clientHeight;
+
+      this.vbX = this.viewBoxOrigin.x - dx * scaleX;
+      this.vbY = this.viewBoxOrigin.y - dy * scaleY;
+      this.updateViewBox();
+    } else if (this.activePointers.size === 2) {
+      // Pinch Zoom
+      const pointers = Array.from(this.activePointers.values());
+      const distance = this.getDistance(pointers[0], pointers[1]);
+      
+      if (this.lastPinchDistance > 0) {
+        const factor = this.lastPinchDistance / distance;
+        // Calculate pinch center point
+        const midX = (pointers[0].clientX + pointers[1].clientX) / 2;
+        const midY = (pointers[0].clientY + pointers[1].clientY) / 2;
+        
+        this.zoomAt(midX, midY, factor);
+      }
+      this.lastPinchDistance = distance;
+    }
+  };
+
+  private handlePointerUp = (e: PointerEvent) => {
+    this.activePointers.delete(e.pointerId);
+    if (this.activePointers.size < 2) {
+      this.lastPinchDistance = 0;
+    }
+    if (this.activePointers.size === 0) {
+      this.isPointerDown = false;
+    }
+  };
+
+  private handlePointerCancel = (e: PointerEvent) => {
+    this.activePointers.delete(e.pointerId);
+    if (this.activePointers.size < 2) {
+      this.lastPinchDistance = 0;
+    }
+    if (this.activePointers.size === 0) {
+      this.isPointerDown = false;
+    }
+  };
+
+  private handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 0.9 : 1.1;
+    this.zoomAt(e.clientX, e.clientY, zoomFactor);
+  };
+
+  private handleClick = (e: MouseEvent) => {
+    if (this.role !== 'admin') return;
+
+    const target = e.target as SVGElement;
+    const pathElement = target.closest('path');
+    
+    if (pathElement) {
+      const countryInfo = this.getCountryInfo(pathElement);
+      if (countryInfo && this.onCountryClick) {
+        this.onCountryClick(countryInfo.code, countryInfo.element);
+      }
+    }
+  };
+
   private initEvents(): void {
     // Hover Tooltips on country paths
-    this.svg.addEventListener('pointerover', (e) => {
-      const target = e.target as SVGElement;
-      const pathElement = target.closest('path');
-      if (pathElement) {
-        const countryInfo = this.getCountryInfo(pathElement);
-        if (countryInfo) {
-          const { code } = countryInfo;
-          const countryName = COUNTRY_NAMES[code.toLowerCase()] || code;
-          const assignment = this.assignmentsMap.get(code);
-          
-          let content = `<div style="font-weight: 700; font-size: 14px;">${countryName}</div>`;
-          if (assignment) {
-            content += `<div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8;">
-              <span class="color-swatch" style="background-color: ${assignment.color_hex}; width: 10px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid rgba(255,255,255,0.2); margin-right: 0;"></span>
-              <span>${assignment.name}</span>
-            </div>`;
-          } else {
-            content += `<div style="margin-top: 4px; font-size: 12px; color: #64748b;">Unassigned</div>`;
-          }
-          
-          this.tooltip.innerHTML = content;
-          this.tooltip.style.display = 'block';
-          this.tooltip.offsetHeight; // force reflow
-          this.tooltip.style.opacity = '1';
-        }
-      }
-    });
-
-    this.svg.addEventListener('pointermove', (e) => {
-      if (this.tooltip.style.display === 'block') {
-        const tooltipWidth = this.tooltip.clientWidth;
-        const tooltipHeight = this.tooltip.clientHeight;
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-
-        let left = e.clientX + 15;
-        let top = e.clientY + 15;
-
-        // Prevent tooltip from going off the right side
-        if (left + tooltipWidth > viewportWidth) {
-          left = e.clientX - tooltipWidth - 15;
-        }
-
-        // Prevent tooltip from going off the bottom
-        if (top + tooltipHeight > viewportHeight) {
-          top = e.clientY - tooltipHeight - 15;
-        }
-
-        this.tooltip.style.left = `${left}px`;
-        this.tooltip.style.top = `${top}px`;
-      }
-    });
-
-    this.svg.addEventListener('pointerout', (e) => {
-      const target = e.target as SVGElement;
-      const pathElement = target.closest('path');
-      if (pathElement) {
-        this.tooltip.style.opacity = '0';
-        this.tooltip.style.display = 'none';
-      }
-    });
+    this.svg.addEventListener('pointerover', this.handlePointerOver);
+    this.svg.addEventListener('pointermove', this.handlePointerMove);
+    this.svg.addEventListener('pointerout', this.handlePointerOut);
 
     // Pointer Down (Mouse, Touch, Pen)
-    this.container.addEventListener('pointerdown', (e) => {
-      this.activePointers.set(e.pointerId, e);
-      
-      if (this.activePointers.size === 1) {
-        this.isPointerDown = true;
-        this.pointerOrigin.x = e.clientX;
-        this.pointerOrigin.y = e.clientY;
-        this.viewBoxOrigin.x = this.vbX;
-        this.viewBoxOrigin.y = this.vbY;
-      } else if (this.activePointers.size === 2) {
-        // Prepare pinch-to-zoom
-        const pointers = Array.from(this.activePointers.values());
-        this.lastPinchDistance = this.getDistance(pointers[0], pointers[1]);
-      }
-      this.container.setPointerCapture(e.pointerId);
-    });
+    this.container.addEventListener('pointerdown', this.handlePointerDown);
 
     // Pointer Move
-    this.container.addEventListener('pointermove', (e) => {
-      if (!this.activePointers.has(e.pointerId)) return;
-      this.activePointers.set(e.pointerId, e);
-
-      if (this.activePointers.size === 1 && this.isPointerDown) {
-        // Pan
-        const dx = e.clientX - this.pointerOrigin.x;
-        const dy = e.clientY - this.pointerOrigin.y;
-        
-        // Scale panning speed based on ratio between SVG viewBox width and container element width
-        const scaleX = this.vbW / this.container.clientWidth;
-        const scaleY = this.vbH / this.container.clientHeight;
-
-        this.vbX = this.viewBoxOrigin.x - dx * scaleX;
-        this.vbY = this.viewBoxOrigin.y - dy * scaleY;
-        this.updateViewBox();
-      } else if (this.activePointers.size === 2) {
-        // Pinch Zoom
-        const pointers = Array.from(this.activePointers.values());
-        const distance = this.getDistance(pointers[0], pointers[1]);
-        
-        if (this.lastPinchDistance > 0) {
-          const factor = this.lastPinchDistance / distance;
-          // Calculate pinch center point
-          const midX = (pointers[0].clientX + pointers[1].clientX) / 2;
-          const midY = (pointers[0].clientY + pointers[1].clientY) / 2;
-          
-          this.zoomAt(midX, midY, factor);
-        }
-        this.lastPinchDistance = distance;
-      }
-    });
+    this.container.addEventListener('pointermove', this.handlePointerMoveContainer);
 
     // Pointer Up / Cancel
-    const endPointer = (e: PointerEvent) => {
-      this.activePointers.delete(e.pointerId);
-      if (this.activePointers.size < 2) {
-        this.lastPinchDistance = 0;
-      }
-      if (this.activePointers.size === 0) {
-        this.isPointerDown = false;
-      }
-    };
-    
-    this.container.addEventListener('pointerup', endPointer);
-    this.container.addEventListener('pointercancel', endPointer);
+    this.container.addEventListener('pointerup', this.handlePointerUp);
+    this.container.addEventListener('pointercancel', this.handlePointerCancel);
 
     // Mouse Wheel Zoom
-    this.container.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const zoomFactor = e.deltaY < 0 ? 0.9 : 1.1;
-      this.zoomAt(e.clientX, e.clientY, zoomFactor);
-    }, { passive: false });
+    this.container.addEventListener('wheel', this.handleWheel, { passive: false });
 
     // Country Path Click Event (Only in Admin Mode)
-    this.svg.addEventListener('click', (e) => {
-      if (this.role !== 'admin') return;
+    this.svg.addEventListener('click', this.handleClick);
+  }
 
-      const target = e.target as SVGElement;
-      const pathElement = target.closest('path');
-      
-      if (pathElement) {
-        const countryInfo = this.getCountryInfo(pathElement);
-        if (countryInfo && this.onCountryClick) {
-          this.onCountryClick(countryInfo.code, countryInfo.element);
-        }
-      }
-    });
+  public destroy(): void {
+    this.svg.removeEventListener('pointerover', this.handlePointerOver);
+    this.svg.removeEventListener('pointermove', this.handlePointerMove);
+    this.svg.removeEventListener('pointerout', this.handlePointerOut);
+    
+    this.container.removeEventListener('pointerdown', this.handlePointerDown);
+    this.container.removeEventListener('pointermove', this.handlePointerMoveContainer);
+    this.container.removeEventListener('pointerup', this.handlePointerUp);
+    this.container.removeEventListener('pointercancel', this.handlePointerCancel);
+    this.container.removeEventListener('wheel', this.handleWheel);
+    
+    this.svg.removeEventListener('click', this.handleClick);
+    
+    this.tooltip?.remove();
   }
 
   private getDistance(p1: PointerEvent, p2: PointerEvent): number {

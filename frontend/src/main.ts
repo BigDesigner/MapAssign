@@ -1,5 +1,5 @@
 import { MapEngine, CountryAssignment } from './mapEngine';
-import { exportMapToPDF, LegendItem } from './pdfExport';
+import { exportMapToPNG, LegendItem } from './pdfExport';
 import { COUNTRY_NAMES } from './countryNames';
 
 // State Interfaces
@@ -120,6 +120,10 @@ class AppController {
       } catch (err) {
         console.error('Logout request failed:', err);
       }
+      if (this.mapEngine) {
+        this.mapEngine.destroy();
+        this.mapEngine = null;
+      }
       this.role = null;
       this.currentUsernameOrName = '';
       this.loginScreen.style.display = 'flex';
@@ -224,7 +228,7 @@ class AppController {
       }
     });
 
-    // Handle PDF Export
+    // Handle PNG Export
     this.pdfExportBtn.addEventListener('click', async () => {
       const svg = document.querySelector('svg');
       if (!svg) {
@@ -245,10 +249,10 @@ class AppController {
       }
 
       try {
-        await exportMapToPDF(svg, legendItems);
+        await exportMapToPNG(svg, legendItems);
       } catch (err: any) {
-        console.error('PDF Export error:', err);
-        alert('Failed to generate PDF: ' + err.message);
+        console.error('PNG Export error:', err);
+        alert('Failed to generate PNG image: ' + err.message);
       } finally {
         this.pdfExportBtn.disabled = false;
         this.pdfExportBtn.innerHTML = originalText;
@@ -448,6 +452,11 @@ class AppController {
     if (!svg || !container) {
       alert('Map container error.');
       return;
+    }
+
+    if (this.mapEngine) {
+      this.mapEngine.destroy();
+      this.mapEngine = null;
     }
 
     if (this.role === 'admin') {
