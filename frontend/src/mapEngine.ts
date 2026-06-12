@@ -25,6 +25,7 @@ export class MapEngine {
   private viewBoxOrigin = { x: 0, y: 0 };
   private activePointers: Map<number, PointerEvent> = new Map();
   private lastPinchDistance = 0;
+  private hasDragged = false;
 
   // Tooltip & Cache
   private tooltip!: HTMLElement;
@@ -172,12 +173,12 @@ export class MapEngine {
       this.pointerOrigin.y = e.clientY;
       this.viewBoxOrigin.x = this.vbX;
       this.viewBoxOrigin.y = this.vbY;
+      this.hasDragged = false;
     } else if (this.activePointers.size === 2) {
       // Prepare pinch-to-zoom
       const pointers = Array.from(this.activePointers.values());
       this.lastPinchDistance = this.getDistance(pointers[0], pointers[1]);
     }
-    this.container.setPointerCapture(e.pointerId);
   };
 
   private handlePointerMoveContainer = (e: PointerEvent) => {
@@ -189,13 +190,20 @@ export class MapEngine {
       const dx = e.clientX - this.pointerOrigin.x;
       const dy = e.clientY - this.pointerOrigin.y;
       
-      // Scale panning speed based on ratio between SVG viewBox width and container element width
-      const scaleX = this.vbW / this.container.clientWidth;
-      const scaleY = this.vbH / this.container.clientHeight;
+      if (!this.hasDragged && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+        this.hasDragged = true;
+        this.container.setPointerCapture(e.pointerId);
+      }
 
-      this.vbX = this.viewBoxOrigin.x - dx * scaleX;
-      this.vbY = this.viewBoxOrigin.y - dy * scaleY;
-      this.updateViewBox();
+      if (this.hasDragged) {
+        // Scale panning speed based on ratio between SVG viewBox width and container element width
+        const scaleX = this.vbW / this.container.clientWidth;
+        const scaleY = this.vbH / this.container.clientHeight;
+
+        this.vbX = this.viewBoxOrigin.x - dx * scaleX;
+        this.vbY = this.viewBoxOrigin.y - dy * scaleY;
+        this.updateViewBox();
+      }
     } else if (this.activePointers.size === 2) {
       // Pinch Zoom
       const pointers = Array.from(this.activePointers.values());
@@ -214,6 +222,9 @@ export class MapEngine {
   };
 
   private handlePointerUp = (e: PointerEvent) => {
+    if (this.container.hasPointerCapture(e.pointerId)) {
+      this.container.releasePointerCapture(e.pointerId);
+    }
     this.activePointers.delete(e.pointerId);
     if (this.activePointers.size < 2) {
       this.lastPinchDistance = 0;
@@ -224,6 +235,9 @@ export class MapEngine {
   };
 
   private handlePointerCancel = (e: PointerEvent) => {
+    if (this.container.hasPointerCapture(e.pointerId)) {
+      this.container.releasePointerCapture(e.pointerId);
+    }
     this.activePointers.delete(e.pointerId);
     if (this.activePointers.size < 2) {
       this.lastPinchDistance = 0;
@@ -241,6 +255,7 @@ export class MapEngine {
 
   private handleClick = (e: MouseEvent) => {
     if (this.role !== 'admin') return;
+    if (this.hasDragged) return;
 
     const target = e.target as SVGElement;
     const mapElement = target.closest('path, circle');
