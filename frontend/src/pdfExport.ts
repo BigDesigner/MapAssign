@@ -33,6 +33,17 @@ export function sanitizeSVG(svgClone: SVGSVGElement): void {
       }
     });
   });
+
+  // 5. Harita üzerindeki beyaz dikdörtgen arka planı ve okyanus dolgusunu şeffaf yap
+  const worldRect = svgClone.getElementById('World');
+  if (worldRect) {
+    worldRect.setAttribute('fill', 'transparent');
+  }
+  const oceanPath = svgClone.getElementById('Ocean');
+  if (oceanPath) {
+    oceanPath.setAttribute('fill', 'transparent');
+    oceanPath.setAttribute('stroke', 'none');
+  }
 }
 
 export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendItem[] = []): Promise<void> {
