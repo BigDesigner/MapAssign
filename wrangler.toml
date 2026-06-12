@@ -15,6 +15,6 @@ preview_id = "REPLACE_WITH_KV_PREVIEW_NAMESPACE_ID"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "map-assign-db"
+database_name = "mapassign"
 # You must create this database using: wrangler d1 create map-assign-db
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "535e995a-3ac8-4cbd-b2f1-0be4fca3c224"
