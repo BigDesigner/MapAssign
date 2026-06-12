@@ -59,22 +59,22 @@ export class MapEngine {
     this.initEvents();
   }
 
-  private getCountryInfo(pathElement: SVGPathElement): { code: string; element: SVGElement } | null {
-    let code = pathElement.id || pathElement.getAttribute('id') || '';
-    let element: SVGElement = pathElement;
-
-    // Check parent group if path doesn't have ID
-    if (!code && pathElement.parentElement) {
-      const parent = pathElement.parentElement;
-      if (parent.tagName.toLowerCase() === 'g') {
-        code = parent.id || parent.getAttribute('id') || '';
-        element = parent as unknown as SVGElement;
+  private getCountryInfo(targetElement: SVGElement): { code: string; element: SVGElement } | null {
+    // Check if the element is inside a country group <g id="XX">
+    const parentGroup = targetElement.closest('g');
+    if (parentGroup) {
+      const id = parentGroup.id || parentGroup.getAttribute('id') || '';
+      if (id && id.length === 2) {
+        return { code: id.toUpperCase(), element: parentGroup };
       }
     }
 
-    if (code && (!code.startsWith('_') || code === '_somaliland')) {
-      return { code: code.toUpperCase(), element };
+    // Fallback: check the element itself
+    const id = targetElement.id || targetElement.getAttribute('id') || '';
+    if (id && (id.length === 2 || id === '_somaliland')) {
+      return { code: id.toUpperCase(), element: targetElement };
     }
+
     return null;
   }
 
@@ -100,9 +100,9 @@ export class MapEngine {
 
   private handlePointerOver = (e: PointerEvent) => {
     const target = e.target as SVGElement;
-    const pathElement = target.closest('path');
-    if (pathElement) {
-      const countryInfo = this.getCountryInfo(pathElement);
+    const mapElement = target.closest('path, circle');
+    if (mapElement) {
+      const countryInfo = this.getCountryInfo(mapElement as SVGElement);
       if (countryInfo) {
         const { code } = countryInfo;
         const countryName = COUNTRY_NAMES[code.toLowerCase()] || code;
@@ -153,8 +153,8 @@ export class MapEngine {
 
   private handlePointerOut = (e: PointerEvent) => {
     const target = e.target as SVGElement;
-    const pathElement = target.closest('path');
-    if (pathElement) {
+    const mapElement = target.closest('path, circle');
+    if (mapElement) {
       this.tooltip.style.opacity = '0';
       this.tooltip.style.display = 'none';
     }
@@ -240,10 +240,10 @@ export class MapEngine {
     if (this.role !== 'admin') return;
 
     const target = e.target as SVGElement;
-    const pathElement = target.closest('path');
+    const mapElement = target.closest('path, circle');
     
-    if (pathElement) {
-      const countryInfo = this.getCountryInfo(pathElement);
+    if (mapElement) {
+      const countryInfo = this.getCountryInfo(mapElement as SVGElement);
       if (countryInfo && this.onCountryClick) {
         this.onCountryClick(countryInfo.code, countryInfo.element);
       }
@@ -336,16 +336,18 @@ export class MapEngine {
 
     // Apply active colors
     assignments.forEach(assign => {
-      const code = assign.country_code.toLowerCase();
-      this.assignmentsMap.set(assign.country_code.toUpperCase(), assign);
+      const code = assign.country_code;
+      this.assignmentsMap.set(code.toUpperCase(), assign);
       
-      // SVG might group paths or have singular paths
-      const element = this.svg.getElementById(code);
+      // SVG might group paths or have singular paths (with varying ID cases)
+      const element = this.svg.getElementById(code)
+                   || this.svg.getElementById(code.toUpperCase())
+                   || this.svg.getElementById(code.toLowerCase());
       if (element) {
         if (element.tagName.toLowerCase() === 'path') {
           (element as SVGPathElement).style.fill = assign.color_hex;
         } else {
-          // It's a group <g id="us">
+          // It's a group <g id="US">
           const subpaths = element.querySelectorAll('path');
           subpaths.forEach(p => {
             p.style.fill = assign.color_hex;
@@ -361,7 +363,6 @@ export class MapEngine {
     repName?: string,
     repId?: number
   ): void {
-    const code = countryCode.toLowerCase();
     const uCode = countryCode.toUpperCase();
     
     if (colorHex) {
@@ -375,7 +376,9 @@ export class MapEngine {
       this.assignmentsMap.delete(uCode);
     }
 
-    const element = this.svg.getElementById(code);
+    const element = this.svg.getElementById(countryCode)
+                 || this.svg.getElementById(uCode)
+                 || this.svg.getElementById(countryCode.toLowerCase());
     if (element) {
       const fillVal = colorHex || '';
       if (element.tagName.toLowerCase() === 'path') {

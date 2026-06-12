@@ -597,7 +597,7 @@ class AppController {
             li.addEventListener('mouseenter', () => {
               li.style.background = 'rgba(255, 255, 255, 0.05)';
               li.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              const el = document.getElementById(c.code) as SVGElement | null;
+              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
               if (el) {
                 if (el.tagName.toLowerCase() === 'path') {
                   (el as SVGPathElement).style.stroke = '#ffffff';
@@ -615,7 +615,7 @@ class AppController {
             li.addEventListener('mouseleave', () => {
               li.style.background = 'rgba(255, 255, 255, 0.02)';
               li.style.borderColor = 'rgba(255, 255, 255, 0.03)';
-              const el = document.getElementById(c.code) as SVGElement | null;
+              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
               if (el) {
                 if (el.tagName.toLowerCase() === 'path') {
                   (el as SVGPathElement).style.stroke = '#334155';
@@ -632,7 +632,7 @@ class AppController {
 
             // Click interaction to pulse path/group
             li.addEventListener('click', () => {
-              const el = document.getElementById(c.code) as SVGElement | null;
+              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
               if (el && this.mapEngine) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -873,6 +873,21 @@ class AppController {
 
 // Start application
 window.addEventListener('DOMContentLoaded', async () => {
+  // Asenkron olarak SVG haritasını yükle ve map-container'a yerleştir
+  const mapContainer = document.getElementById('map-container');
+  if (mapContainer) {
+    try {
+      const res = await fetch('/world-states.svg');
+      if (res.ok) {
+        mapContainer.innerHTML = await res.text();
+      } else {
+        console.error('Failed to load world map SVG:', res.statusText);
+      }
+    } catch (err) {
+      console.error('Error loading world map SVG:', err);
+    }
+  }
+
   const app = new AppController();
   // Try to restore session from existing cookie
   try {
