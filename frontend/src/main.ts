@@ -61,7 +61,17 @@ class AppController {
   private manageRepsBtn = document.getElementById('manage-reps-btn') as HTMLButtonElement;
   private closeRepsBtn = document.getElementById('close-reps-btn') as HTMLButtonElement;
   private createRepForm = document.getElementById('create-rep-form') as HTMLFormElement;
-  private repsList = document.getElementById('reps-list') as HTMLElement;
+  private adminRepSelect = document.getElementById('admin-rep-select') as HTMLSelectElement;
+  private repEditSection = document.getElementById('rep-edit-section') as HTMLElement;
+  private repCreateSection = document.getElementById('rep-create-section') as HTMLElement;
+  private editRepForm = document.getElementById('edit-rep-form') as HTMLFormElement;
+  private editRepName = document.getElementById('edit-rep-name') as HTMLInputElement;
+  private editRepColor = document.getElementById('edit-rep-color') as HTMLInputElement;
+  private editRepPass = document.getElementById('edit-rep-pass') as HTMLInputElement;
+  private deleteRepBtn = document.getElementById('delete-rep-btn') as HTMLButtonElement;
+  private adminAddCountrySelect = document.getElementById('admin-add-country-select') as HTMLSelectElement;
+  private adminAddCountryBtn = document.getElementById('admin-add-country-btn') as HTMLButtonElement;
+  private repAssignedList = document.getElementById('rep-assigned-list') as HTMLElement;
 
   private pdfExportBtn = document.getElementById('pdf-export-btn') as HTMLButtonElement;
 
@@ -115,6 +125,11 @@ class AppController {
       this.changePassContainer.style.display = 'none';
       this.repCountriesPanel.style.display = 'none';
       this.changePassForm.reset();
+      this.adminRepSelect.value = '0';
+      this.repEditSection.style.display = 'none';
+      this.repCreateSection.style.display = 'none';
+      this.createRepForm.reset();
+      this.editRepForm.reset();
       document.getElementById('map-container')?.classList.remove('admin-mode');
     });
 
@@ -265,14 +280,142 @@ class AppController {
           passInput.value = '';
           colorInput.value = '#3b82f6';
           
-          this.loadRepresentativesList();
-          // Reload dropdown options
-          this.fetchRepresentatives();
+          await this.loadRepresentativesList();
         } else {
           alert(data.error || 'Failed to create representative.');
         }
       } catch (err) {
         console.error('Create representative error:', err);
+        alert('Server connection error.');
+      }
+    });
+
+    // Handle admin rep selection change
+    this.adminRepSelect.addEventListener('change', () => {
+      const val = this.adminRepSelect.value;
+      if (val === '0') {
+        this.repEditSection.style.display = 'none';
+        this.repCreateSection.style.display = 'none';
+      } else if (val === 'new') {
+        this.repEditSection.style.display = 'none';
+        this.repCreateSection.style.display = 'block';
+      } else {
+        this.repCreateSection.style.display = 'none';
+        this.repEditSection.style.display = 'block';
+        this.populateRepresentativeEditForm(parseInt(val, 10));
+      }
+    });
+
+    // Handle edit representative submit
+    this.editRepForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const repId = parseInt(this.adminRepSelect.value, 10);
+      if (!repId || isNaN(repId)) return;
+
+      const name = this.editRepName.value.trim();
+      const color = this.editRepColor.value;
+      const password = this.editRepPass.value;
+
+      try {
+        const res = await apiFetch('/api/admin/representatives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'update',
+            id: repId,
+            name,
+            color,
+            password: password ? password : undefined
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('Representative updated successfully.');
+          this.editRepPass.value = '';
+          // Reload list and update map colors
+          await this.fetchRepresentatives();
+          await this.loadMapStateAdmin();
+          // Keep selection
+          this.adminRepSelect.value = repId.toString();
+          this.populateRepresentativeEditForm(repId);
+        } else {
+          alert(data.error || 'Failed to update representative.');
+        }
+      } catch (err) {
+        console.error('Update representative error:', err);
+        alert('Server connection error.');
+      }
+    });
+
+    // Handle delete representative click
+    this.deleteRepBtn.addEventListener('click', async () => {
+      const repId = parseInt(this.adminRepSelect.value, 10);
+      if (!repId || isNaN(repId)) return;
+
+      const rep = this.representatives.find(r => r.id === repId);
+      if (!rep) return;
+
+      if (!confirm(`Are you sure you want to delete ${rep.name}?`)) return;
+
+      try {
+        const res = await apiFetch('/api/admin/representatives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete', id: repId })
+        });
+
+        if (res.ok) {
+          alert('Representative deleted successfully.');
+          await this.loadRepresentativesList();
+          await this.loadMapStateAdmin(); // Refresh map assignments since Cascade delete removed them
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Failed to delete representative.');
+        }
+      } catch (err) {
+        console.error('Delete representative error:', err);
+      }
+    });
+
+    // Handle assign country to representative
+    this.adminAddCountryBtn.addEventListener('click', async () => {
+      const repId = parseInt(this.adminRepSelect.value, 10);
+      if (!repId || isNaN(repId)) return;
+
+      const countryCode = this.adminAddCountrySelect.value;
+      if (!countryCode) {
+        alert('Please select a country to assign.');
+        return;
+      }
+
+      try {
+        const res = await apiFetch('/api/admin/assign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            country_code: countryCode,
+            representative_id: repId
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          // Update map color immediately
+          const rep = this.representatives.find(r => r.id === repId);
+          this.mapEngine?.updateSingleCountryColor(
+            countryCode,
+            rep ? rep.color_hex : null,
+            rep ? rep.name : undefined,
+            rep ? rep.id : undefined
+          );
+          // Refresh lists
+          this.populateRepresentativeEditForm(repId);
+        } else {
+          alert(data.error || 'Could not assign country.');
+        }
+      } catch (err) {
+        console.error('Assignment error:', err);
         alert('Server connection error.');
       }
     });
@@ -337,13 +480,22 @@ class AppController {
       if (res.ok) {
         this.representatives = data.representatives;
         
-        // Re-populate select dropdown
+        // Re-populate select dropdowns
         this.repSelect.innerHTML = '<option value="0">Unassigned</option>';
+        this.adminRepSelect.innerHTML = `
+          <option value="0">-- Select Representative --</option>
+          <option value="new">+ Create New Representative</option>
+        `;
         this.representatives.forEach(rep => {
           const opt = document.createElement('option');
           opt.value = rep.id.toString();
           opt.textContent = rep.name;
           this.repSelect.appendChild(opt);
+
+          const adminOpt = document.createElement('option');
+          adminOpt.value = rep.id.toString();
+          adminOpt.textContent = rep.name;
+          this.adminRepSelect.appendChild(adminOpt);
         });
       }
     } catch (err) {
@@ -483,63 +635,125 @@ class AppController {
   }
 
   private async loadRepresentativesList(): Promise<void> {
-    this.repsList.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Loading...</p>';
     await this.fetchRepresentatives();
-    
-    if (this.representatives.length === 0) {
-      this.repsList.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">No representatives created.</p>';
-      return;
-    }
+    this.adminRepSelect.value = '0';
+    this.repEditSection.style.display = 'none';
+    this.repCreateSection.style.display = 'none';
+    this.createRepForm.reset();
+    this.editRepForm.reset();
+  }
 
-    this.repsList.innerHTML = '';
-    this.representatives.forEach(rep => {
-      const item = document.createElement('div');
-      item.style.display = 'flex';
-      item.style.justifyContent = 'space-between';
-      item.style.alignItems = 'center';
-      item.style.padding = '8px 0';
-      item.style.borderBottom = '1px solid var(--panel-border)';
-      
-      const details = document.createElement('div');
-      details.innerHTML = `<span class="color-swatch" style="background-color: ${rep.color_hex}"></span><strong style="font-size: 14px;">${rep.name}</strong> <span style="font-size: 12px; color: var(--text-muted);">(${rep.representative_code})</span>`;
-      
-      const deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.style.width = 'auto';
-      deleteBtn.style.padding = '4px 8px';
-      deleteBtn.style.background = 'rgba(239, 68, 68, 0.1)';
-      deleteBtn.style.color = 'var(--danger-color)';
-      deleteBtn.style.border = '1px solid rgba(239, 68, 68, 0.2)';
-      deleteBtn.style.fontSize = '12px';
-      deleteBtn.style.borderRadius = '6px';
-      
-      deleteBtn.addEventListener('click', async () => {
-        if (!confirm(`Are you sure you want to delete ${rep.name}?`)) return;
+  private async populateRepresentativeEditForm(repId: number): Promise<void> {
+    const rep = this.representatives.find(r => r.id === repId);
+    if (!rep) return;
+
+    this.editRepName.value = rep.name;
+    this.editRepColor.value = rep.color_hex;
+    this.editRepPass.value = '';
+
+    this.repAssignedList.innerHTML = '<p style="color: var(--text-muted); font-size: 12px; margin: 4px 0;">Loading assignments...</p>';
+
+    try {
+      const res = await apiFetch('/api/map/state');
+      const data = await res.json();
+      if (res.ok) {
+        const allAssignments = data.assignments as Array<{
+          country_code: string;
+          representative_id: number;
+          name: string;
+          color_hex: string;
+        }>;
+
+        const assignedToThisRep = allAssignments.filter(a => a.representative_id === repId);
         
-        try {
-          const res = await apiFetch('/api/admin/representatives', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'delete', id: rep.id })
+        this.repAssignedList.innerHTML = '';
+        if (assignedToThisRep.length === 0) {
+          this.repAssignedList.innerHTML = '<p style="color: var(--text-muted); font-size: 13px; font-style: italic; margin: 4px 0;">No countries assigned.</p>';
+        } else {
+          const mapped = assignedToThisRep.map(a => {
+            const code = a.country_code.toLowerCase();
+            const name = COUNTRY_NAMES[code] || a.name || code.toUpperCase();
+            return { code, name };
           });
-          
-          if (res.ok) {
-            this.loadRepresentativesList();
-            this.fetchRepresentatives();
-            this.loadMapStateAdmin(); // Refresh map assignments since Cascade delete removed them
-          } else {
-            const data = await res.json();
-            alert(data.error || 'Failed to delete representative.');
-          }
-        } catch (err) {
-          console.error('Delete representative error:', err);
-        }
-      });
+          mapped.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 
-      item.appendChild(details);
-      item.appendChild(deleteBtn);
-      this.repsList.appendChild(item);
-    });
+          mapped.forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'assigned-country-item';
+            item.style.display = 'flex';
+            item.style.justifyContent = 'space-between';
+            item.style.alignItems = 'center';
+            item.style.padding = '6px 0';
+            item.style.borderBottom = '1px solid rgba(255, 255, 255, 0.03)';
+
+            const label = document.createElement('span');
+            label.style.fontSize = '13px';
+            label.textContent = `${c.name} (${c.code})`;
+
+            const unassignBtn = document.createElement('button');
+            unassignBtn.textContent = '-';
+            unassignBtn.style.width = '22px';
+            unassignBtn.style.height = '22px';
+            unassignBtn.style.padding = '0';
+            unassignBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+            unassignBtn.style.color = 'var(--danger-color)';
+            unassignBtn.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+            unassignBtn.style.borderRadius = '50%';
+            unassignBtn.style.fontSize = '12px';
+            unassignBtn.style.cursor = 'pointer';
+
+            unassignBtn.addEventListener('click', async () => {
+              try {
+                const assignRes = await apiFetch('/api/admin/assign', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    country_code: c.code,
+                    representative_id: 0
+                  })
+                });
+
+                if (assignRes.ok) {
+                  this.mapEngine?.updateSingleCountryColor(c.code, null);
+                  this.populateRepresentativeEditForm(repId);
+                } else {
+                  alert('Failed to unassign country.');
+                }
+              } catch (err) {
+                console.error(err);
+              }
+            });
+
+            item.appendChild(label);
+            item.appendChild(unassignBtn);
+            this.repAssignedList.appendChild(item);
+          });
+        }
+
+        const assignedCodes = new Set(assignedToThisRep.map(a => a.country_code.toLowerCase()));
+        this.adminAddCountrySelect.innerHTML = '<option value="">-- Choose Country --</option>';
+        
+        const allCountries = Object.keys(COUNTRY_NAMES).map(code => ({
+          code,
+          name: COUNTRY_NAMES[code]
+        }));
+        allCountries.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+
+        allCountries.forEach(c => {
+          if (!assignedCodes.has(c.code)) {
+            const otherAssign = allAssignments.find(a => a.country_code.toLowerCase() === c.code);
+            const opt = document.createElement('option');
+            opt.value = c.code;
+            opt.textContent = otherAssign 
+              ? `${c.name} (Assigned to ${otherAssign.name})`
+              : c.name;
+            this.adminAddCountrySelect.appendChild(opt);
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error populating representative edit form:', err);
+    }
   }
 
   private async openAssignPanel(countryCode: string, path: SVGElement): Promise<void> {

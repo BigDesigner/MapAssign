@@ -316,6 +316,12 @@
         bottom: auto !important;
         top: 240px;
       }
+      #reps-crud-panel {
+        width: calc(100vw - 32px) !important;
+        left: 16px !important;
+        top: 240px !important;
+        bottom: auto !important;
+      }
     }
   </style>
 </head>
@@ -418,39 +424,86 @@
       </div>
     </div>
 
-    <!-- Representatives CRUD Panel -->
-    <div id="reps-crud-panel" class="overlay-panel" style="display: none; top: 16px; right: 16px; width: 320px; max-height: calc(100vh - 32px); overflow-y: auto;">
+    <!-- Representatives Management Panel -->
+    <div id="reps-crud-panel" class="overlay-panel" style="display: none; top: 140px; left: 16px; width: 280px; max-height: calc(100vh - 160px); overflow-y: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 16px; font-weight: 800;">Representatives</h3>
-        <button id="close-reps-btn" style="width: 24px; height: 24px; padding: 0; background: transparent; color: var(--text-muted); border: none; font-size: 18px;">&times;</button>
-      </div>
-      
-      <!-- List -->
-      <div id="reps-list" style="margin-bottom: 16px; max-height: 180px; overflow-y: auto;">
-        <!-- Dynamic content -->
+        <h3 style="font-size: 16px; font-weight: 800; margin: 0;">Manage Representatives</h3>
+        <button id="close-reps-btn" style="width: 24px; height: 24px; padding: 0; background: transparent; color: var(--text-muted); border: none; font-size: 18px; cursor: pointer;">&times;</button>
       </div>
 
-      <!-- Form to Create -->
-      <form id="create-rep-form" style="border-top: 1px solid var(--panel-border); padding-top: 16px;">
-        <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">ADD REPRESENTATIVE</h4>
-        <div class="form-group">
-          <label for="rep-code">Rep Code</label>
-          <input type="text" id="rep-code" required placeholder="e.g. rep_us">
+      <!-- Select Dropdown -->
+      <div class="form-group">
+        <label for="admin-rep-select">Select Representative</label>
+        <select id="admin-rep-select">
+          <option value="0">-- Select Representative --</option>
+          <option value="new">+ Create New Representative</option>
+        </select>
+      </div>
+
+      <!-- Representative Edit Section (displayed when a rep is selected) -->
+      <div id="rep-edit-section" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+        <form id="edit-rep-form">
+          <div class="form-group">
+            <label for="edit-rep-name">Full Name</label>
+            <input type="text" id="edit-rep-name" required placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label for="edit-rep-color">Color Hex</label>
+            <input type="color" id="edit-rep-color" style="height: 40px; padding: 0; cursor: pointer;">
+          </div>
+          <div class="form-group">
+            <label for="edit-rep-pass">New Password (Optional)</label>
+            <input type="password" id="edit-rep-pass" placeholder="Leave blank to keep current">
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button type="submit" style="flex: 1;">Save Changes</button>
+            <button type="button" id="delete-rep-btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.2); width: auto; padding: 10px 12px; display: flex; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer;" title="Delete Representative">
+              <svg style="width: 18px; height: 18px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </form>
+
+        <!-- Assigned Countries List inside representative settings -->
+        <div style="border-top: 1px solid var(--panel-border); padding-top: 12px;">
+          <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">ASSIGNED COUNTRIES</h4>
+          
+          <!-- Add Assignment controls (+ button) -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <select id="admin-add-country-select" style="flex: 1; padding: 8px 12px; font-size: 13px;">
+              <option value="">-- Choose Country --</option>
+            </select>
+            <button id="admin-add-country-btn" style="width: 38px; height: 38px; padding: 0; background: var(--success-color); border: none; border-radius: 10px; font-size: 18px; color: white; cursor: pointer;" title="Assign Country">+</button>
+          </div>
+
+          <div id="rep-assigned-list" style="max-height: 150px; overflow-y: auto;">
+            <!-- Dynamic assigned countries list with minus (-) delete buttons -->
+          </div>
         </div>
-        <div class="form-group">
-          <label for="rep-name">Full Name</label>
-          <input type="text" id="rep-name" required placeholder="e.g. John Doe">
-        </div>
-        <div class="form-group">
-          <label for="rep-color">Color Hex</label>
-          <input type="color" id="rep-color" value="#3b82f6" style="height: 40px; padding: 0; cursor: pointer;">
-        </div>
-        <div class="form-group">
-          <label for="rep-pass">Password</label>
-          <input type="password" id="rep-pass" required placeholder="••••••••">
-        </div>
-        <button type="submit">Create</button>
-      </form>
+      </div>
+
+      <!-- Form to Create New Representative -->
+      <div id="rep-create-section" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+        <form id="create-rep-form">
+          <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text-muted);">ADD REPRESENTATIVE</h4>
+          <div class="form-group">
+            <label for="rep-code">Rep Code</label>
+            <input type="text" id="rep-code" required placeholder="e.g. rep_us">
+          </div>
+          <div class="form-group">
+            <label for="rep-name">Full Name</label>
+            <input type="text" id="rep-name" required placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label for="rep-color">Color Hex</label>
+            <input type="color" id="rep-color" value="#3b82f6" style="height: 40px; padding: 0; cursor: pointer;">
+          </div>
+          <div class="form-group">
+            <label for="rep-pass">Password</label>
+            <input type="password" id="rep-pass" required placeholder="••••••••">
+          </div>
+          <button type="submit">Create</button>
+        </form>
+      </div>
     </div>
 
     <!-- Floating Action Buttons -->

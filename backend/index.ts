@@ -337,6 +337,41 @@ export default {
           }
         } 
         
+        else if (action === 'update') {
+          const { id, name, color, password } = body;
+
+          if (!id || !name || !color) {
+            return jsonResponse({ error: 'Missing representative parameters.' }, 400, headers);
+          }
+
+          if (!isValidColorHex(color)) {
+            return jsonResponse({ error: 'Invalid hex color format.' }, 400, headers);
+          }
+
+          const cleanName = sanitizeInput(name.trim());
+
+          try {
+            if (password && password.trim() !== '') {
+              const passwordHash = await import('./auth').then(m => m.hashPassword(password));
+              await env.DB.prepare(
+                'UPDATE representatives SET name = ?, color_hex = ?, password_hash = ? WHERE id = ?'
+              )
+                .bind(cleanName, color, passwordHash, id)
+                .run();
+            } else {
+              await env.DB.prepare(
+                'UPDATE representatives SET name = ?, color_hex = ? WHERE id = ?'
+              )
+                .bind(cleanName, color, id)
+                .run();
+            }
+
+            return jsonResponse({ success: true, message: 'Representative updated.' }, 200, headers);
+          } catch (e: any) {
+            return jsonResponse({ error: 'Database error occurred: ' + e.message }, 500, headers);
+          }
+        }
+        
         else if (action === 'list') {
           const reps = await env.DB.prepare(
             'SELECT id, representative_code, name, color_hex, created_at FROM representatives ORDER BY name ASC'
