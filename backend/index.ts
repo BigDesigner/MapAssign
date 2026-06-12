@@ -91,10 +91,25 @@ export default {
       }
 
       // CSRF Protection: Verify Origin/Referer for POST requests against allowed origins list
-      const origin = request.headers.get('Origin') || request.headers.get('Referer');
-      const allowedOrigins = getAllowedOrigins(env);
-      if (origin) {
-        const isValid = allowedOrigins.some(allowed => origin.startsWith(allowed));
+      const originHeader = request.headers.get('Origin');
+      const refererHeader = request.headers.get('Referer');
+      
+      let clientOrigin: string | null = null;
+      if (originHeader) {
+        try {
+          clientOrigin = new URL(originHeader).origin;
+        } catch {
+          clientOrigin = originHeader;
+        }
+      } else if (refererHeader) {
+        try {
+          clientOrigin = new URL(refererHeader).origin;
+        } catch {}
+      }
+
+      if (clientOrigin) {
+        const allowedOrigins = getAllowedOrigins(env);
+        const isValid = allowedOrigins.includes(clientOrigin);
         if (!isValid) {
           return jsonResponse({ error: 'CSRF validation failed: Origin not allowed.' }, 403, headers);
         }
