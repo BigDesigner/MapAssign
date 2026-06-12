@@ -2,10 +2,7 @@ name = "mapassign-api"
 main = "backend/index.ts"
 compatibility_date = "2024-01-01"
 
-[vars]
-# In production, define these using "wrangler secret put" or the Cloudflare Dashboard
-ADMIN_USERNAME = "admin"
-ALLOWED_ORIGIN = "http://localhost:5173"
+
 
 [[kv_namespaces]]
 binding = "SESSIONS"
