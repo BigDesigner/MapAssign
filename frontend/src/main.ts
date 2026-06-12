@@ -705,7 +705,8 @@ class AppController {
             const item = document.createElement('div');
             item.className = 'assigned-country-item';
             item.style.display = 'flex';
-            item.style.justifyContent = 'space-between';
+            item.style.justifyContent = 'flex-start';
+            item.style.gap = '8px';
             item.style.alignItems = 'center';
             item.style.padding = '6px 0';
             item.style.borderBottom = '1px solid rgba(255, 255, 255, 0.03)';
@@ -716,8 +717,9 @@ class AppController {
 
             const unassignBtn = document.createElement('button');
             unassignBtn.textContent = '-';
-            unassignBtn.style.width = '22px';
-            unassignBtn.style.height = '22px';
+            unassignBtn.style.width = '20px';
+            unassignBtn.style.height = '20px';
+            unassignBtn.style.flexShrink = '0';
             unassignBtn.style.padding = '0';
             unassignBtn.style.background = 'rgba(239, 68, 68, 0.1)';
             unassignBtn.style.color = 'var(--danger-color)';
@@ -748,8 +750,8 @@ class AppController {
               }
             });
 
-            item.appendChild(label);
             item.appendChild(unassignBtn);
+            item.appendChild(label);
             this.repAssignedList.appendChild(item);
           });
         }
