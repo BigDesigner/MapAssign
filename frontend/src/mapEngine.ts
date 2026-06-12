@@ -1,3 +1,5 @@
+import { COUNTRY_NAMES } from './countryNames';
+
 export interface CountryAssignment {
   country_code: string;
   representative_id: number;
@@ -24,6 +26,10 @@ export class MapEngine {
   private activePointers: Map<number, PointerEvent> = new Map();
   private lastPinchDistance = 0;
 
+  // Tooltip & Cache
+  private tooltip!: HTMLElement;
+  private assignmentsMap: Map<string, CountryAssignment> = new Map();
+
   constructor(
     svg: SVGSVGElement,
     container: HTMLElement,
@@ -34,6 +40,12 @@ export class MapEngine {
     this.container = container;
     this.role = role;
     this.onCountryClick = onCountryClick;
+
+    // Clear browser default title tooltip
+    this.svg.querySelector('title')?.remove();
+
+    // Create custom floating tooltip
+    this.initTooltip();
 
     // Read initial viewBox if present
     const vb = this.svg.getAttribute('viewBox');
@@ -47,7 +59,89 @@ export class MapEngine {
     this.initEvents();
   }
 
+  private initTooltip(): void {
+    this.tooltip = document.createElement('div');
+    this.tooltip.id = 'map-tooltip';
+    this.tooltip.style.position = 'fixed';
+    this.tooltip.style.display = 'none';
+    this.tooltip.style.pointerEvents = 'none';
+    this.tooltip.style.background = 'rgba(15, 23, 42, 0.95)';
+    this.tooltip.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+    this.tooltip.style.borderRadius = '8px';
+    this.tooltip.style.padding = '8px 12px';
+    this.tooltip.style.fontSize = '13px';
+    this.tooltip.style.color = '#f8fafc';
+    this.tooltip.style.zIndex = '10000';
+    this.tooltip.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.5)';
+    this.tooltip.style.backdropFilter = 'blur(8px)';
+    this.tooltip.style.transition = 'opacity 0.1s ease';
+    this.tooltip.style.opacity = '0';
+    document.body.appendChild(this.tooltip);
+  }
+
   private initEvents(): void {
+    // Hover Tooltips on country paths
+    this.svg.addEventListener('pointerover', (e) => {
+      const target = e.target as SVGElement;
+      const pathElement = target.closest('path');
+      if (pathElement) {
+        const countryCode = (pathElement.id || pathElement.getAttribute('id'))?.toUpperCase();
+        if (countryCode && !countryCode.startsWith('_')) {
+          const countryName = COUNTRY_NAMES[countryCode.toLowerCase()] || countryCode;
+          const assignment = this.assignmentsMap.get(countryCode);
+          
+          let content = `<div style="font-weight: 700; font-size: 14px;">${countryName}</div>`;
+          if (assignment) {
+            content += `<div style="margin-top: 6px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #94a3b8;">
+              <span class="color-swatch" style="background-color: ${assignment.color_hex}; width: 10px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid rgba(255,255,255,0.2); margin-right: 0;"></span>
+              <span>${assignment.name}</span>
+            </div>`;
+          } else {
+            content += `<div style="margin-top: 4px; font-size: 12px; color: #64748b;">Unassigned</div>`;
+          }
+          
+          this.tooltip.innerHTML = content;
+          this.tooltip.style.display = 'block';
+          this.tooltip.offsetHeight; // force reflow
+          this.tooltip.style.opacity = '1';
+        }
+      }
+    });
+
+    this.svg.addEventListener('pointermove', (e) => {
+      if (this.tooltip.style.display === 'block') {
+        const tooltipWidth = this.tooltip.clientWidth;
+        const tooltipHeight = this.tooltip.clientHeight;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let left = e.clientX + 15;
+        let top = e.clientY + 15;
+
+        // Prevent tooltip from going off the right side
+        if (left + tooltipWidth > viewportWidth) {
+          left = e.clientX - tooltipWidth - 15;
+        }
+
+        // Prevent tooltip from going off the bottom
+        if (top + tooltipHeight > viewportHeight) {
+          top = e.clientY - tooltipHeight - 15;
+        }
+
+        this.tooltip.style.left = `${left}px`;
+        this.tooltip.style.top = `${top}px`;
+      }
+    });
+
+    this.svg.addEventListener('pointerout', (e) => {
+      const target = e.target as SVGElement;
+      const pathElement = target.closest('path');
+      if (pathElement) {
+        this.tooltip.style.opacity = '0';
+        this.tooltip.style.display = 'none';
+      }
+    });
+
     // Pointer Down (Mouse, Touch, Pen)
     this.container.addEventListener('pointerdown', (e) => {
       this.activePointers.set(e.pointerId, e);
@@ -179,9 +273,14 @@ export class MapEngine {
       path.style.fill = '';
     });
 
+    // Populate assignments cache
+    this.assignmentsMap.clear();
+
     // Apply active colors
     assignments.forEach(assign => {
       const code = assign.country_code.toLowerCase();
+      this.assignmentsMap.set(assign.country_code.toUpperCase(), assign);
+      
       // SVG might group paths or have singular paths
       const element = this.svg.getElementById(code);
       if (element) {
@@ -198,8 +297,26 @@ export class MapEngine {
     });
   }
 
-  public updateSingleCountryColor(countryCode: string, colorHex: string | null): void {
+  public updateSingleCountryColor(
+    countryCode: string,
+    colorHex: string | null,
+    repName?: string,
+    repId?: number
+  ): void {
     const code = countryCode.toLowerCase();
+    const uCode = countryCode.toUpperCase();
+    
+    if (colorHex) {
+      this.assignmentsMap.set(uCode, {
+        country_code: countryCode,
+        representative_id: repId || 0,
+        name: repName || 'Representative',
+        color_hex: colorHex
+      });
+    } else {
+      this.assignmentsMap.delete(uCode);
+    }
+
     const element = this.svg.getElementById(code);
     if (element) {
       const fillVal = colorHex || '';

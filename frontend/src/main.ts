@@ -128,7 +128,9 @@ class AppController {
           const selectedRep = this.representatives.find(r => r.id === repId);
           this.mapEngine?.updateSingleCountryColor(
             this.selectedCountryCode,
-            selectedRep ? selectedRep.color_hex : null
+            selectedRep ? selectedRep.color_hex : null,
+            selectedRep ? selectedRep.name : undefined,
+            selectedRep ? selectedRep.id : undefined
           );
         } else {
           alert(data.error || 'Could not save assignment.');
