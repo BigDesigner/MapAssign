@@ -316,9 +316,7 @@ export default {
           const cleanCode = sanitizeInput(code.trim());
           const cleanName = sanitizeInput(name.trim());
           
-          const passwordHash = await verifyAdminPassword(password, password) // just generate using our PBKDF2 pipeline
-            ? '' // dummy line
-            : await import('./auth').then(m => m.hashPassword(password));
+          const passwordHash = await hashPassword(password);
 
           try {
             await env.DB.prepare(
@@ -333,7 +331,7 @@ export default {
             if (e.message && e.message.includes('UNIQUE')) {
               return jsonResponse({ error: 'Representative code already exists.' }, 409, headers);
             }
-            return jsonResponse({ error: 'Database error occurred.' }, 500, headers);
+            return jsonResponse({ error: 'Database error occurred: ' + e.message }, 500, headers);
           }
         } 
         
@@ -352,7 +350,7 @@ export default {
 
           try {
             if (password && password.trim() !== '') {
-              const passwordHash = await import('./auth').then(m => m.hashPassword(password));
+              const passwordHash = await hashPassword(password);
               await env.DB.prepare(
                 'UPDATE representatives SET name = ?, color_hex = ?, password_hash = ? WHERE id = ?'
               )
