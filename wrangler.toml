@@ -1,4 +1,4 @@
-name = "map-assign-api"
+name = "mapassign"
 main = "backend/index.ts"
 compatibility_date = "2024-01-01"
 

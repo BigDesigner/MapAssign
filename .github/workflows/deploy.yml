@@ -43,6 +43,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: 'map-assign-frontend' # Update this to match your Cloudflare Pages project name
+          projectName: 'mapassign' # Update this to match your Cloudflare Pages project name
           directory: 'frontend/dist'
           gitBranch: 'main'
