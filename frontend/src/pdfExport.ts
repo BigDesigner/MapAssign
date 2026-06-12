@@ -44,6 +44,22 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
       // Sanitize the cloned SVG
       sanitizeSVG(svgClone);
 
+      // Get the bounding dimensions of the SVG viewbox or current width/height
+      const viewBoxStr = svgElement.getAttribute('viewBox') || '0 0 800 600';
+      const [, , w, h] = viewBoxStr.split(/\s+/).map(Number);
+      
+      const width = w || svgElement.clientWidth || 800;
+      const height = h || svgElement.clientHeight || 600;
+
+      // Define 4x scale for high resolution
+      const scale = 4;
+      const exportWidth = width * scale;
+      const exportHeight = height * scale;
+
+      // Force explicit high-res dimensions on the SVG clone so it rasterizes crisply
+      svgClone.setAttribute('width', exportWidth.toString());
+      svgClone.setAttribute('height', exportHeight.toString());
+
       // Serialize the clean SVG DOM
       const serializer = new XMLSerializer();
       const svgString = serializer.serializeToString(svgClone);
@@ -53,19 +69,12 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
       const url = URL.createObjectURL(svgBlob);
       
       const img = new Image();
-      
-      // Get the bounding dimensions of the SVG viewbox or current width/height
-      const viewBoxStr = svgElement.getAttribute('viewBox') || '0 0 800 600';
-      const [, , w, h] = viewBoxStr.split(/\s+/).map(Number);
-      
-      const width = w || svgElement.clientWidth || 800;
-      const height = h || svgElement.clientHeight || 600;
 
       img.onload = () => {
         try {
           // Render SVG on a canvas
           const canvas = document.createElement('canvas');
-          canvas.width = width;
+          canvas.width = exportWidth;
           
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -76,59 +85,59 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
 
           // Measure legend layout to determine dynamic canvas height
           let legendAreaHeight = 0;
-          const startX = 30;
-          const itemGap = 20;
-          const dotToTextGap = 8;
-          const dotRadius = 5;
-          const rowHeight = 22;
+          const startX = 30 * scale;
+          const itemGap = 20 * scale;
+          const dotToTextGap = 8 * scale;
+          const dotRadius = 5 * scale;
+          const rowHeight = 22 * scale;
 
           if (legendItems && legendItems.length > 0) {
-            ctx.font = "bold 12px sans-serif";
+            ctx.font = `bold ${12 * scale}px sans-serif`;
             let currentX = startX;
-            let currentY = 25; // Relative to legend start
+            let currentY = 25 * scale; // Relative to legend start
 
             legendItems.forEach(item => {
               const textWidth = ctx.measureText(item.name).width;
               const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
 
-              if (currentX + itemWidth > width - startX && currentX > startX) {
+              if (currentX + itemWidth > exportWidth - startX && currentX > startX) {
                 currentX = startX;
                 currentY += rowHeight;
               }
               currentX += itemWidth + itemGap;
             });
-            legendAreaHeight = currentY + rowHeight + 15; // include padding and safety margin
+            legendAreaHeight = currentY + rowHeight + 15 * scale; // include padding and safety margin
           }
           
           // Set final canvas height incorporating the legend space
-          canvas.height = height + legendAreaHeight;
+          canvas.height = exportHeight + legendAreaHeight;
           
-          // Draw a dark background matching index.html aesthetics (optional but recommended for visual fidelity)
+          // Draw a dark background matching index.html aesthetics
           ctx.fillStyle = '#0b0f19';
-          ctx.fillRect(0, 0, width, height + legendAreaHeight);
+          ctx.fillRect(0, 0, exportWidth, exportHeight + legendAreaHeight);
           
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.drawImage(img, 0, 0, exportWidth, exportHeight);
 
           // Draw legend if we have items
           if (legendAreaHeight > 0) {
             // Draw a separator line between map and legend
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1 * scale;
             ctx.beginPath();
-            ctx.moveTo(30, height + 5);
-            ctx.lineTo(width - 30, height + 5);
+            ctx.moveTo(30 * scale, exportHeight + 5 * scale);
+            ctx.lineTo(exportWidth - 30 * scale, exportHeight + 5 * scale);
             ctx.stroke();
 
             // Draw items
-            ctx.font = "bold 12px sans-serif";
+            ctx.font = `bold ${12 * scale}px sans-serif`;
             let currentX = startX;
-            let currentY = height + 25;
+            let currentY = exportHeight + 25 * scale;
 
             legendItems.forEach(item => {
               const textWidth = ctx.measureText(item.name).width;
               const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
 
-              if (currentX + itemWidth > width - startX && currentX > startX) {
+              if (currentX + itemWidth > exportWidth - startX && currentX > startX) {
                 currentX = startX;
                 currentY += rowHeight;
               }
@@ -141,7 +150,7 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
 
               // Draw dot border for visibility against dark bg
               ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-              ctx.lineWidth = 1;
+              ctx.lineWidth = 1 * scale;
               ctx.stroke();
 
               // Draw representative name text next to dot
