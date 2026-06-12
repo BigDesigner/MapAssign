@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atama Tablosu — Map Assign</title>
+  <meta name="description" content="Temsilci-ülke atamalarının tablo görünümü. CSV olarak indirilebilir.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: rgba(17, 24, 39, 0.85);
+      --surface-solid: #111827;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.16);
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --row-hover: rgba(59,130,246,0.06);
+      --row-alt: rgba(255,255,255,0.015);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(11,15,25,0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    #back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--border-hover); }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    #role-badge {
+      padding: 4px 10px;
+      background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      background: rgba(17,24,39,0.4);
+    }
+
+    .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    #search-input::placeholder { color: var(--text-muted); }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #row-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    #csv-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--success);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    #csv-btn:hover { background: #059669; }
+    #csv-btn:active { transform: scale(0.97); }
+    #csv-btn svg { width: 16px; height: 16px; }
+
+    /* ── Table ── */
+    .table-wrap {
+      flex: 1;
+      overflow-x: auto;
+      padding: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      background: var(--surface-solid);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 60px; /* behind sticky header */
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color 0.15s;
+    }
+    thead th:hover { color: var(--text); }
+    thead th.sort-asc::after { content: ' ▲'; color: var(--accent); font-size: 9px; }
+    thead th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: 9px; }
+
+    thead th:first-child { border-radius: 10px 0 0 0; width: 60px; text-align: center; }
+    thead th:last-child  { border-radius: 0 10px 0 0; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    tbody tr:nth-child(even) { background: var(--row-alt); }
+    tbody tr:hover { background: var(--row-hover); }
+
+    td {
+      padding: 12px 16px;
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    td:first-child { text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+
+    .rep-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 0 6px var(--dot-color, transparent);
+    }
+
+    .country-code-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ── Empty / Loading states ── */
+    #loading-state, #empty-state, #auth-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 80px 24px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    #loading-state.visible, #empty-state.visible, #auth-state.visible { display: flex; }
+
+    .state-icon {
+      width: 56px;
+      height: 56px;
+      opacity: 0.3;
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      header { padding: 0 14px; }
+      header h1 { font-size: 15px; }
+      .toolbar { padding: 12px 14px; }
+      .table-wrap { padding: 12px; }
+      td, thead th { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <a id="back-btn" href="/">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Haritaya Dön
+      </a>
+      <h1>Atama Tablosu</h1>
+      <span id="role-badge">—</span>
+    </div>
+    <button id="csv-btn">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+      </svg>
+      CSV İndir
+    </button>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Temsilci veya ülke ara...">
+    </div>
+    <div class="toolbar-right">
+      <span id="row-count">—</span>
+    </div>
+  </div>
+
+  <!-- Auth error state -->
+  <div id="auth-state">
+    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
+    </svg>
+    <p>Oturum bulunamadı. Lütfen <a href="/" style="color:var(--accent)">giriş yapın</a>.</p>
+  </div>
+
+  <!-- Loading state -->
+  <div id="loading-state" class="visible">
+    <div class="spinner"></div>
+    <p>Veriler yükleniyor…</p>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state">
+    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"/>
+    </svg>
+    <p>Arama kriterine uyan kayıt bulunamadı.</p>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap" id="table-wrap" style="display:none;">
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th data-col="no">No</th>
+          <th data-col="rep" class="sort-asc">Temsilci Adı</th>
+          <th data-col="code">Ülke Kodu</th>
+          <th data-col="name">Ülke Adı</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    // ── Country name map (ISO → display name) ──
+    const COUNTRY_NAMES = {
+      'af':'Afganistan','al':'Arnavutluk','dz':'Cezayir','ad':'Andorra','ao':'Angola',
+      'ag':'Antigua ve Barbuda','ar':'Arjantin','am':'Ermenistan','au':'Avustralya',
+      'at':'Avusturya','az':'Azerbaycan','bs':'Bahamalar','bh':'Bahreyn','bd':'Bangladeş',
+      'bb':'Barbados','by':'Belarus','be':'Belçika','bz':'Belize','bj':'Benin',
+      'bt':'Bhutan','bo':'Bolivya','ba':'Bosna-Hersek','bw':'Botsvana','br':'Brezilya',
+      'bn':'Brunei','bg':'Bulgaristan','bf':'Burkina Faso','bi':'Burundi','cv':'Cabo Verde',
+      'kh':'Kamboçya','cm':'Kamerun','ca':'Kanada','cf':'Orta Afrika Cumhuriyeti',
+      'td':'Çad','cl':'Şili','cn':'Çin','co':'Kolombiya','km':'Komorlar','cd':'Kongo (DRK)',
+      'cg':'Kongo','cr':'Kosta Rika','ci':'Fildişi Sahili','hr':'Hırvatistan','cu':'Küba',
+      'cy':'Kıbrıs','cz':'Çek Cumhuriyeti','dk':'Danimarka','dj':'Cibuti','dm':'Dominika',
+      'do':'Dominik Cumhuriyeti','ec':'Ekvador','eg':'Mısır','sv':'El Salvador',
+      'gq':'Ekvator Ginesi','er':'Eritre','ee':'Estonya','sz':'Esvatini','et':'Etiyopya',
+      'fj':'Fiji','fi':'Finlandiya','fr':'Fransa','ga':'Gabon','gm':'Gambiya',
+      'ge':'Gürcistan','de':'Almanya','gh':'Gana','gr':'Yunanistan','gd':'Grenada',
+      'gt':'Guatemala','gn':'Gine','gw':'Gine-Bissau','gy':'Guyana','ht':'Haiti',
+      'hn':'Honduras','hu':'Macaristan','is':'İzlanda','in':'Hindistan','id':'Endonezya',
+      'ir':'İran','iq':'Irak','ie':'İrlanda','il':'İsrail','it':'İtalya','jm':'Jamaika',
+      'jp':'Japonya','jo':'Ürdün','kz':'Kazakistan','ke':'Kenya','ki':'Kiribati',
+      'kp':'Kuzey Kore','kr':'Güney Kore','kw':'Kuveyt','kg':'Kırgızistan','la':'Laos',
+      'lv':'Letonya','lb':'Lübnan','ls':'Lesotho','lr':'Liberya','ly':'Libya',
+      'li':'Lihtenştayn','lt':'Litvanya','lu':'Lüksemburg','mg':'Madagaskar','mw':'Malavi',
+      'my':'Malezya','mv':'Maldivler','ml':'Mali','mt':'Malta','mh':'Marshall Adaları',
+      'mr':'Moritanya','mu':'Mauritius','mx':'Meksika','fm':'Mikronezya','md':'Moldova',
+      'mc':'Monako','mn':'Moğolistan','me':'Karadağ','ma':'Fas','mz':'Mozambik',
+      'mm':'Myanmar','na':'Namibya','nr':'Nauru','np':'Nepal','nl':'Hollanda',
+      'nz':'Yeni Zelanda','ni':'Nikaragua','ne':'Nijer','ng':'Nijerya','mk':'Kuzey Makedonya',
+      'no':'Norveç','om':'Umman','pk':'Pakistan','pw':'Palau','pa':'Panama',
+      'pg':'Papua Yeni Gine','py':'Paraguay','pe':'Peru','ph':'Filipinler','pl':'Polonya',
+      'pt':'Portekiz','qa':'Katar','ro':'Romanya','ru':'Rusya','rw':'Ruanda',
+      'kn':'Saint Kitts ve Nevis','lc':'Saint Lucia','vc':'Saint Vincent','ws':'Samoa',
+      'sm':'San Marino','st':'Sao Tome ve Principe','sa':'Suudi Arabistan','sn':'Senegal',
+      'rs':'Sırbistan','sc':'Seyşeller','sl':'Sierra Leone','sg':'Singapur','sk':'Slovakya',
+      'si':'Slovenya','sb':'Solomon Adaları','so':'Somali','za':'Güney Afrika',
+      'ss':'Güney Sudan','es':'İspanya','lk':'Sri Lanka','sd':'Sudan','sr':'Surinam',
+      'se':'İsveç','ch':'İsviçre','sy':'Suriye','tw':'Tayvan','tj':'Tacikistan',
+      'tz':'Tanzanya','th':'Tayland','tl':'Doğu Timor','tg':'Togo','to':'Tonga',
+      'tt':'Trinidad ve Tobago','tn':'Tunus','tr':'Türkiye','tm':'Türkmenistan',
+      'tv':'Tuvalu','ug':'Uganda','ua':'Ukrayna','ae':'Birleşik Arap Emirlikleri',
+      'gb':'Birleşik Krallık','us':'Amerika Birleşik Devletleri','uy':'Uruguay',
+      'uz':'Özbekistan','vu':'Vanuatu','ve':'Venezuela','vn':'Vietnam','ye':'Yemen',
+      'zm':'Zambiya','zw':'Zimbabwe',
+      // Extra codes in SVG
+      '_somaliland':'Somaliland','fk':'Falkland Adaları','nc':'Yeni Kaledonya',
+      'gl':'Grönland','pr':'Porto Riko','cu':'Küba','bs':'Bahamalar',
+    };
+
+    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+      ? '' : 'https://map-api.akansu.com';
+
+    function apiFetch(path, init = {}) {
+      init.credentials = 'include';
+      return fetch(API_BASE + path, init);
+    }
+
+    // ── State ──
+    let allRows = [];      // { no, rep, code, name, color }
+    let filtered = [];
+    let sortCol = 'rep';
+    let sortDir = 1;       // 1 = asc, -1 = desc
+    let role = null;
+
+    // ── DOM refs ──
+    const tbody         = document.getElementById('table-body');
+    const searchInput   = document.getElementById('search-input');
+    const rowCount      = document.getElementById('row-count');
+    const loadingState  = document.getElementById('loading-state');
+    const emptyState    = document.getElementById('empty-state');
+    const authState     = document.getElementById('auth-state');
+    const tableWrap     = document.getElementById('table-wrap');
+    const csvBtn        = document.getElementById('csv-btn');
+    const roleBadge     = document.getElementById('role-badge');
+
+    function showState(which) {
+      loadingState.classList.toggle('visible', which === 'loading');
+      emptyState.classList.toggle('visible', which === 'empty');
+      authState.classList.toggle('visible', which === 'auth');
+      tableWrap.style.display = which === 'table' ? 'block' : 'none';
+    }
+
+    // ── Fetch data ──
+    async function loadData() {
+      showState('loading');
+      try {
+        // Try admin endpoint first
+        let res = await apiFetch('/api/map/state', { method: 'GET' });
+
+        if (res.status === 401) {
+          showState('auth');
+          return;
+        }
+
+        if (res.status === 403) {
+          // Must be representative — use representative endpoint
+          role = 'representative';
+          res = await apiFetch('/api/representative/state', { method: 'GET' });
+          if (!res.ok) { showState('auth'); return; }
+          const data = await res.json();
+          roleBadge.textContent = 'Temsilci';
+          roleBadge.style.color = '#a3e635';
+          roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
+          roleBadge.style.background = 'rgba(163,230,53,0.1)';
+          // Build rows from rep state (only own countries)
+          allRows = (data.assignedCountries || []).map((code, i) => ({
+            no: i + 1,
+            rep: data.name,
+            code: code.toLowerCase(),
+            name: COUNTRY_NAMES[code.toLowerCase()] || code.toUpperCase(),
+            color: data.colorHex,
+          }));
+        } else {
+          // Admin
+          role = 'admin';
+          const data = await res.json();
+          roleBadge.textContent = 'Admin';
+          const assignments = data.assignments || [];
+          // Group by rep name then sort
+          const sorted = [...assignments].sort((a, b) =>
+            String(a.name).localeCompare(String(b.name), 'tr') ||
+            String(COUNTRY_NAMES[a.country_code] || a.country_code).localeCompare(
+              COUNTRY_NAMES[b.country_code] || b.country_code, 'tr')
+          );
+          allRows = sorted.map((row, i) => ({
+            no: i + 1,
+            rep: row.name,
+            code: (row.country_code || '').toLowerCase(),
+            name: COUNTRY_NAMES[(row.country_code || '').toLowerCase()] || (row.country_code || '').toUpperCase(),
+            color: row.color_hex,
+          }));
+        }
+      } catch (e) {
+        console.error(e);
+        showState('auth');
+        return;
+      }
+      applyFilter();
+    }
+
+    // ── Filter ──
+    function applyFilter() {
+      const q = searchInput.value.trim().toLowerCase();
+      filtered = q
+        ? allRows.filter(r =>
+            r.rep.toLowerCase().includes(q) ||
+            r.name.toLowerCase().includes(q) ||
+            r.code.includes(q)
+          )
+        : [...allRows];
+      applySort();
+    }
+
+    // ── Sort ──
+    function applySort() {
+      filtered.sort((a, b) => {
+        const va = sortCol === 'no' ? a.no : String(a[sortCol]);
+        const vb = sortCol === 'no' ? b.no : String(b[sortCol]);
+        if (sortCol === 'no') return sortDir * (va - vb);
+        return sortDir * va.localeCompare(vb, 'tr');
+      });
+      renderTable();
+    }
+
+    // ── Render ──
+    function renderTable() {
+      rowCount.textContent = `${filtered.length} kayıt`;
+
+      if (!filtered.length) {
+        if (allRows.length === 0) {
+          showState('empty');
+        } else {
+          showState('empty');
+        }
+        return;
+      }
+
+      showState('table');
+
+      tbody.innerHTML = filtered.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>
+            <div class="rep-name-cell">
+              <div class="color-dot" style="background:${r.color}; --dot-color:${r.color};"></div>
+              ${escHtml(r.rep)}
+            </div>
+          </td>
+          <td><span class="country-code-badge">${escHtml(r.code)}</span></td>
+          <td>${escHtml(r.name)}</td>
+        </tr>
+      `).join('');
+    }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // ── CSV Export ──
+    csvBtn.addEventListener('click', () => {
+      if (!filtered.length) return;
+      const header = ['No', 'Temsilci Adı', 'Ülke Kodu', 'Ülke Adı'];
+      const rows = filtered.map((r, i) => [
+        i + 1,
+        `"${r.rep.replace(/"/g,'""')}"`,
+        r.code.toUpperCase(),
+        `"${r.name.replace(/"/g,'""')}"`
+      ]);
+      const csv = [header, ...rows].map(r => r.join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `atamalar_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // ── Search ──
+    searchInput.addEventListener('input', applyFilter);
+
+    // ── Sort header clicks ──
+    document.querySelectorAll('thead th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortDir *= -1;
+        } else {
+          sortCol = col;
+          sortDir = 1;
+        }
+        document.querySelectorAll('thead th').forEach(h => {
+          h.classList.remove('sort-asc','sort-desc');
+        });
+        th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        applySort();
+      });
+    });
+
+    // ── Init ──
+    loadData();
+  </script>
+</body>
+</html>

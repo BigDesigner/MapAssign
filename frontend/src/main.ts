@@ -74,6 +74,7 @@ class AppController {
   private repAssignedList = document.getElementById('rep-assigned-list') as HTMLElement;
 
   private pdfExportBtn = document.getElementById('pdf-export-btn') as HTMLButtonElement;
+  private tableViewBtn = document.getElementById('table-view-btn') as HTMLButtonElement;
 
   constructor() {
     this.initEvents();
@@ -450,6 +451,7 @@ class AppController {
       });
 
       this.controlPanel.style.display = 'block';
+      if (this.tableViewBtn) this.tableViewBtn.style.display = 'flex';
       
       // Load initial lists
       await this.fetchRepresentatives();
@@ -463,6 +465,7 @@ class AppController {
       
       this.mapEngine = new MapEngine(svg, container, 'representative');
       this.controlPanel.style.display = 'block';
+      if (this.tableViewBtn) this.tableViewBtn.style.display = 'flex';
       
       await this.loadMapStateRepresentative();
     }
