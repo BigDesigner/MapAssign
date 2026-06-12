@@ -347,6 +347,8 @@ export class MapEngine {
     const paths = this.svg.querySelectorAll('path');
     paths.forEach(path => {
       path.style.fill = '';
+      path.style.stroke = '';
+      path.style.strokeWidth = '';
     });
 
     // Populate assignments cache
@@ -362,13 +364,22 @@ export class MapEngine {
                    || this.svg.getElementById(code.toUpperCase())
                    || this.svg.getElementById(code.toLowerCase());
       if (element) {
+        const isGBSub = element.id.toUpperCase().startsWith('GB-');
         if (element.tagName.toLowerCase() === 'path') {
           (element as SVGPathElement).style.fill = assign.color_hex;
+          if (isGBSub) {
+            (element as SVGPathElement).style.stroke = assign.color_hex;
+            (element as SVGPathElement).style.strokeWidth = '0.2px';
+          }
         } else {
           // It's a group <g id="US">
           const subpaths = element.querySelectorAll('path');
           subpaths.forEach(p => {
             p.style.fill = assign.color_hex;
+            if (isGBSub) {
+              p.style.stroke = assign.color_hex;
+              p.style.strokeWidth = '0.2px';
+            }
           });
         }
       }
@@ -399,12 +410,21 @@ export class MapEngine {
                  || this.svg.getElementById(countryCode.toLowerCase());
     if (element) {
       const fillVal = colorHex || '';
+      const isGBSub = element.id.toUpperCase().startsWith('GB-');
       if (element.tagName.toLowerCase() === 'path') {
         (element as SVGPathElement).style.fill = fillVal;
+        if (isGBSub) {
+          (element as SVGPathElement).style.stroke = fillVal;
+          (element as SVGPathElement).style.strokeWidth = fillVal ? '0.2px' : '';
+        }
       } else {
         const subpaths = element.querySelectorAll('path');
         subpaths.forEach(p => {
           p.style.fill = fillVal;
+          if (isGBSub) {
+            p.style.stroke = fillVal;
+            p.style.strokeWidth = fillVal ? '0.2px' : '';
+          }
         });
       }
     }
