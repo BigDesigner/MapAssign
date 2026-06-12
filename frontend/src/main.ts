@@ -2,6 +2,15 @@ import { MapEngine, CountryAssignment } from './mapEngine';
 import { exportMapToPDF } from './pdfExport';
 
 // State Interfaces
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? ''
+  : 'https://map-api.akansu.com';
+
+function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const url = `${API_BASE}${path}`;
+  init.credentials = 'include';
+  return fetch(url, init);
+}
 interface Representative {
   id: number;
   representative_code: string;
@@ -55,7 +64,7 @@ class AppController {
       const password = this.passwordInput.value;
 
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await apiFetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ usernameOrCode, password })
@@ -79,7 +88,7 @@ class AppController {
     // Handle Logout
     this.logoutBtn.addEventListener('click', async () => {
       try {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        await apiFetch('/api/auth/logout', { method: 'POST' });
       } catch (err) {
         console.error('Logout request failed:', err);
       }
@@ -104,7 +113,7 @@ class AppController {
       const repId = parseInt(this.repSelect.value, 10);
       
       try {
-        const res = await fetch('/api/admin/assign', {
+        const res = await apiFetch('/api/admin/assign', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -173,7 +182,7 @@ class AppController {
       const passInput = document.getElementById('rep-pass') as HTMLInputElement;
 
       try {
-        const res = await fetch('/api/admin/representatives', {
+        const res = await apiFetch('/api/admin/representatives', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -251,7 +260,7 @@ class AppController {
 
   private async fetchRepresentatives(): Promise<void> {
     try {
-      const res = await fetch('/api/admin/representatives', {
+      const res = await apiFetch('/api/admin/representatives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'list' })
@@ -277,7 +286,7 @@ class AppController {
 
   private async loadMapStateAdmin(): Promise<void> {
     try {
-      const res = await fetch('/api/map/state');
+      const res = await apiFetch('/api/map/state');
       const data = await res.json();
       if (res.ok && this.mapEngine) {
         this.mapEngine.updateColors(data.assignments);
@@ -289,7 +298,7 @@ class AppController {
 
   private async loadMapStateRepresentative(): Promise<void> {
     try {
-      const res = await fetch('/api/representative/state');
+      const res = await apiFetch('/api/representative/state');
       const data = await res.json();
       if (res.ok && this.mapEngine) {
         // Construct standard assignments structure for rendering
@@ -340,7 +349,7 @@ class AppController {
         if (!confirm(`Are you sure you want to delete ${rep.name}?`)) return;
         
         try {
-          const res = await fetch('/api/admin/representatives', {
+          const res = await apiFetch('/api/admin/representatives', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'delete', id: rep.id })
