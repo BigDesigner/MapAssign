@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Atama Tablosu — Map Assign</title>
+  <title>Atama Tablosu — Temsilci Atama</title>
   <meta name="description" content="Temsilci-ülke atamalarının tablo görünümü. CSV olarak indirilebilir.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -300,16 +300,16 @@
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
         </svg>
-        Back to Map
+        Haritaya Dön
       </a>
-      <h1>Assignment Table</h1>
+      <h1>Atama Tablosu</h1>
       <span id="role-badge">—</span>
     </div>
     <button id="csv-btn">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
       </svg>
-      Download CSV
+      CSV Olarak İndir
     </button>
   </header>
 
@@ -319,7 +319,7 @@
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
       </svg>
-      <input type="text" id="search-input" placeholder="Search representative or country...">
+      <input type="text" id="search-input" placeholder="Temsilci veya ülke ara...">
     </div>
     <div class="toolbar-right">
       <span id="row-count">—</span>
@@ -331,13 +331,13 @@
     <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
     </svg>
-    <p>Session not found. Please <a href="/" style="color:var(--accent)">log in</a>.</p>
+    <p>Oturum bulunamadı. Lütfen <a href="/" style="color:var(--accent)">giriş yapın</a>.</p>
   </div>
 
   <!-- Loading state -->
   <div id="loading-state" class="visible">
     <div class="spinner"></div>
-    <p>Loading data...</p>
+    <p>Veriler yükleniyor...</p>
   </div>
 
   <!-- Empty state -->
@@ -345,7 +345,7 @@
     <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"/>
     </svg>
-    <p>No records found matching search criteria.</p>
+    <p>Arama kriterlerine uygun kayıt bulunamadı.</p>
   </div>
 
   <!-- Table -->
@@ -354,9 +354,9 @@
       <thead>
         <tr>
           <th data-col="no">No</th>
-          <th data-col="rep" class="sort-asc">Representative Name</th>
-          <th data-col="code">Country Code</th>
-          <th data-col="name">Country Name</th>
+          <th data-col="rep" class="sort-asc">Temsilci Adı</th>
+          <th data-col="code">Ülke Kodu</th>
+          <th data-col="name">Ülke Adı</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -417,7 +417,7 @@
           res = await apiFetch('/api/representative/state', { method: 'GET' });
           if (!res.ok) { showState('auth'); return; }
           const data = await res.json();
-          roleBadge.textContent = 'REPRESENTATIVE';
+          roleBadge.textContent = 'TEMSİLCİ';
           roleBadge.style.color = '#a3e635';
           roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
           roleBadge.style.background = 'rgba(163,230,53,0.1)';
@@ -433,7 +433,7 @@
           // Admin
           role = 'admin';
           const data = await res.json();
-          roleBadge.textContent = 'ADMIN';
+          roleBadge.textContent = 'YÖNETİCİ';
           const assignments = data.assignments || [];
           // Group by rep name then sort
           const sorted = [...assignments].sort((a, b) =>
@@ -483,7 +483,7 @@
 
     // ── Render ──
     function renderTable() {
-      rowCount.textContent = `${filtered.length} records`;
+      rowCount.textContent = `${filtered.length} kayıt`;
 
       if (!filtered.length) {
         if (allRows.length === 0) {
@@ -520,7 +520,7 @@
     // ── CSV Export ──
     csvBtn.addEventListener('click', () => {
       if (!filtered.length) return;
-      const header = ['No', 'Representative Name', 'Country Code', 'Country Name'];
+      const header = ['No', 'Temsilci Adı', 'Ülke Kodu', 'Ülke Adı'];
       const rows = filtered.map((r, i) => [
         i + 1,
         `"${r.rep.replace(/"/g,'""')}"`,

@@ -115,7 +115,7 @@ export class MapEngine {
             <span>${assignment.name}</span>
           </div>`;
         } else {
-          content += `<div style="margin-top: 4px; font-size: 12px; color: #64748b;">Unassigned</div>`;
+          content += `<div style="margin-top: 4px; font-size: 12px; color: #64748b;">Temsilci Atanmamış</div>`;
         }
         
         this.tooltip.innerHTML = content;

@@ -105,11 +105,11 @@ class AppController {
           this.currentUsernameOrName = data.name || usernameOrCode;
           this.bootstrapApp();
         } else {
-          alert(data.error || 'Login failed.');
+          alert(data.error || 'Giriş başarısız.');
         }
       } catch (err) {
         console.error('Login error:', err);
-        alert('Could not connect to backend server.');
+        alert('Sunucuya bağlanılamadı.');
       }
     });
 
@@ -164,15 +164,15 @@ class AppController {
 
         const data = await res.json();
         if (res.ok) {
-          alert('Password updated successfully.');
+          alert('Şifre başarıyla güncellendi.');
           this.changePassForm.reset();
           this.changePassContainer.style.display = 'none';
         } else {
-          alert(data.error || 'Failed to change password.');
+          alert(data.error || 'Şifre değiştirilemedi.');
         }
       } catch (err) {
         console.error('Password change error:', err);
-        alert('Server connection error.');
+        alert('Sunucu bağlantı hatası.');
       }
     });
 
@@ -220,11 +220,11 @@ class AppController {
             selectedRep ? selectedRep.id : undefined
           );
         } else {
-          alert(data.error || 'Could not save assignment.');
+          alert(data.error || 'Atama kaydedilemedi.');
         }
       } catch (err) {
         console.error('Assignment error:', err);
-        alert('Server connection error.');
+        alert('Sunucu bağlantı hatası.');
       }
     });
 
@@ -232,7 +232,7 @@ class AppController {
     this.pdfExportBtn.addEventListener('click', async () => {
       const svg = document.querySelector('svg');
       if (!svg) {
-        alert('SVG element not found on page.');
+        alert('Sayfada SVG harita elementi bulunamadı.');
         return;
       }
 
@@ -252,7 +252,7 @@ class AppController {
         await exportMapToPNG(svg, legendItems);
       } catch (err: any) {
         console.error('PNG Export error:', err);
-        alert('Failed to generate PNG image: ' + err.message);
+        alert('PNG resmi oluşturulamadı: ' + err.message);
       } finally {
         this.pdfExportBtn.disabled = false;
         this.pdfExportBtn.innerHTML = originalText;
@@ -300,11 +300,11 @@ class AppController {
           
           await this.loadRepresentativesList();
         } else {
-          alert(data.error || 'Failed to create representative.');
+          alert(data.error || 'Temsilci oluşturulamadı.');
         }
       } catch (err) {
         console.error('Create representative error:', err);
-        alert('Server connection error.');
+        alert('Sunucu bağlantı hatası.');
       }
     });
 
@@ -349,7 +349,7 @@ class AppController {
 
         const data = await res.json();
         if (res.ok) {
-          alert('Representative updated successfully.');
+          alert('Temsilci başarıyla güncellendi.');
           this.editRepPass.value = '';
           // Reload list and update map colors
           await this.fetchRepresentatives();
@@ -358,11 +358,11 @@ class AppController {
           this.adminRepSelect.value = repId.toString();
           this.populateRepresentativeEditForm(repId);
         } else {
-          alert(data.error || 'Failed to update representative.');
+          alert(data.error || 'Temsilci güncellenemedi.');
         }
       } catch (err) {
         console.error('Update representative error:', err);
-        alert('Server connection error.');
+        alert('Sunucu bağlantı hatası.');
       }
     });
 
@@ -374,7 +374,7 @@ class AppController {
       const rep = this.representatives.find(r => r.id === repId);
       if (!rep) return;
 
-      if (!confirm(`Are you sure you want to delete ${rep.name}?`)) return;
+      if (!confirm(`${rep.name} isimli temsilciyi silmek istediğinize emin misiniz?`)) return;
 
       try {
         const res = await apiFetch('/api/admin/representatives', {
@@ -384,12 +384,12 @@ class AppController {
         });
 
         if (res.ok) {
-          alert('Representative deleted successfully.');
+          alert('Temsilci başarıyla silindi.');
           await this.loadRepresentativesList();
           await this.loadMapStateAdmin(); // Refresh map assignments since Cascade delete removed them
         } else {
           const data = await res.json();
-          alert(data.error || 'Failed to delete representative.');
+          alert(data.error || 'Temsilci silinemedi.');
         }
       } catch (err) {
         console.error('Delete representative error:', err);
@@ -403,7 +403,7 @@ class AppController {
 
       const countryCode = this.adminAddCountrySelect.value;
       if (!countryCode) {
-        alert('Please select a country to assign.');
+        alert('Lütfen atanacak bir ülke seçin.');
         return;
       }
 
@@ -430,11 +430,11 @@ class AppController {
           // Refresh lists
           this.populateRepresentativeEditForm(repId);
         } else {
-          alert(data.error || 'Could not assign country.');
+          alert(data.error || 'Ülke atanamadı.');
         }
       } catch (err) {
         console.error('Assignment error:', err);
-        alert('Server connection error.');
+        alert('Sunucu bağlantı hatası.');
       }
     });
   }
@@ -450,7 +450,7 @@ class AppController {
     const container = document.getElementById('map-container');
     
     if (!svg || !container) {
-      alert('Map container error.');
+      alert('Harita sarmalayıcı hatası.');
       return;
     }
 
@@ -461,7 +461,7 @@ class AppController {
 
     if (this.role === 'admin') {
       container.classList.add('admin-mode');
-      this.roleTitle.textContent = 'Admin Mode';
+      this.roleTitle.textContent = 'Yönetici Modu';
       this.userDisplay.textContent = this.currentUsernameOrName;
       this.adminControls.style.display = 'block';
       this.repControls.style.display = 'none';
@@ -480,7 +480,7 @@ class AppController {
       await this.loadMapStateAdmin();
     } else if (this.role === 'representative') {
       container.classList.remove('admin-mode');
-      this.roleTitle.textContent = 'Representative';
+      this.roleTitle.textContent = 'Temsilci';
       this.userDisplay.textContent = this.currentUsernameOrName;
       this.adminControls.style.display = 'none';
       this.repControls.style.display = 'block';
@@ -506,10 +506,10 @@ class AppController {
         this.representatives = data.representatives;
         
         // Re-populate select dropdowns
-        this.repSelect.innerHTML = '<option value="0">Unassigned</option>';
+        this.repSelect.innerHTML = '<option value="0">Temsilci Atanmamış</option>';
         this.adminRepSelect.innerHTML = `
-          <option value="0">-- Select Representative --</option>
-          <option value="new">+ Create New Representative</option>
+          <option value="0">-- Temsilci Seçin --</option>
+          <option value="new">+ Yeni Temsilci Oluştur</option>
         `;
         this.representatives.forEach(rep => {
           const opt = document.createElement('option');
@@ -752,7 +752,7 @@ class AppController {
                   this.mapEngine?.updateSingleCountryColor(c.code, null);
                   this.populateRepresentativeEditForm(repId);
                 } else {
-                  alert('Failed to unassign country.');
+                  alert('Ülke ataması kaldırılamadı.');
                 }
               } catch (err) {
                 console.error(err);
@@ -766,7 +766,7 @@ class AppController {
         }
 
         const assignedCodes = new Set(assignedToThisRep.map(a => a.country_code.toLowerCase()));
-        this.adminAddCountrySelect.innerHTML = '<option value="">-- Choose Country --</option>';
+        this.adminAddCountrySelect.innerHTML = '<option value="">-- Ülke Seçin --</option>';
         
         const allCountries = Object.keys(COUNTRY_NAMES).map(code => ({
           code,
@@ -780,7 +780,7 @@ class AppController {
             const opt = document.createElement('option');
             opt.value = c.code;
             opt.textContent = otherAssign 
-              ? `${c.name} (Assigned to ${otherAssign.name})`
+              ? `${c.name} (${otherAssign.name} temsilcisine atanmış)`
               : c.name;
             this.adminAddCountrySelect.appendChild(opt);
           }
