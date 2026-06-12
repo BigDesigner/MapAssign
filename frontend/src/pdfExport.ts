@@ -32,7 +32,12 @@ export function sanitizeSVG(svgClone: SVGSVGElement): void {
   });
 }
 
-export function exportMapToPDF(svgElement: SVGSVGElement): Promise<void> {
+export interface LegendItem {
+  name: string;
+  color_hex: string;
+}
+
+export function exportMapToPDF(svgElement: SVGSVGElement, legendItems: LegendItem[] = []): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // Clone the SVG element so we don't modify the active DOM
@@ -63,7 +68,6 @@ export function exportMapToPDF(svgElement: SVGSVGElement): Promise<void> {
           // Render SVG on a canvas
           const canvas = document.createElement('canvas');
           canvas.width = width;
-          canvas.height = height;
           
           const ctx = canvas.getContext('2d');
           if (!ctx) {
@@ -71,23 +75,96 @@ export function exportMapToPDF(svgElement: SVGSVGElement): Promise<void> {
             reject(new Error('Could not get 2D context for canvas PDF rendering.'));
             return;
           }
+
+          // Measure legend layout to determine dynamic canvas height
+          let legendAreaHeight = 0;
+          const startX = 30;
+          const itemGap = 20;
+          const dotToTextGap = 8;
+          const dotRadius = 5;
+          const rowHeight = 22;
+
+          if (legendItems && legendItems.length > 0) {
+            ctx.font = "bold 12px sans-serif";
+            let currentX = startX;
+            let currentY = 25; // Relative to legend start
+
+            legendItems.forEach(item => {
+              const textWidth = ctx.measureText(item.name).width;
+              const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
+
+              if (currentX + itemWidth > width - startX && currentX > startX) {
+                currentX = startX;
+                currentY += rowHeight;
+              }
+              currentX += itemWidth + itemGap;
+            });
+            legendAreaHeight = currentY + rowHeight + 15; // include padding and safety margin
+          }
+          
+          // Set final canvas height incorporating the legend space
+          canvas.height = height + legendAreaHeight;
           
           // Draw a dark background matching index.html aesthetics (optional but recommended for visual fidelity)
           ctx.fillStyle = '#0b0f19';
-          ctx.fillRect(0, 0, width, height);
+          ctx.fillRect(0, 0, width, height + legendAreaHeight);
           
           ctx.drawImage(img, 0, 0, width, height);
+
+          // Draw legend if we have items
+          if (legendAreaHeight > 0) {
+            // Draw a separator line between map and legend
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(30, height + 5);
+            ctx.lineTo(width - 30, height + 5);
+            ctx.stroke();
+
+            // Draw items
+            ctx.font = "bold 12px sans-serif";
+            let currentX = startX;
+            let currentY = height + 25;
+
+            legendItems.forEach(item => {
+              const textWidth = ctx.measureText(item.name).width;
+              const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
+
+              if (currentX + itemWidth > width - startX && currentX > startX) {
+                currentX = startX;
+                currentY += rowHeight;
+              }
+
+              // Draw color dot (circle)
+              ctx.fillStyle = item.color_hex;
+              ctx.beginPath();
+              ctx.arc(currentX + dotRadius, currentY, dotRadius, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Draw dot border for visibility against dark bg
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+
+              // Draw representative name text next to dot
+              ctx.fillStyle = '#f8fafc';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(item.name, currentX + (dotRadius * 2) + dotToTextGap, currentY);
+
+              currentX += itemWidth + itemGap;
+            });
+          }
           
           // Generate PDF using jsPDF
-          // Landscape orientation, pts, sizes
           const pdf = new jsPDF({
             orientation: width > height ? 'landscape' : 'portrait',
             unit: 'px',
-            format: [width, height]
+            format: [width, height + legendAreaHeight]
           });
           
           const imgData = canvas.toDataURL('image/png');
-          pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+          pdf.addImage(imgData, 'PNG', 0, 0, width, height + legendAreaHeight);
           pdf.save('map_snapshot.pdf');
           
           URL.revokeObjectURL(url);

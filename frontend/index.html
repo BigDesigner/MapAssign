@@ -335,6 +335,64 @@
         flex-direction: row;
       }
     }
+
+    /* Map Legend Footer Styles */
+    .map-legend-container {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 12px 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+      z-index: 85;
+      max-width: calc(100% - 360px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      display: none; /* dynamically shown when logged in */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .map-legend-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-color);
+      white-space: nowrap;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @media (max-width: 640px) {
+      .map-legend-container {
+        width: calc(100vw - 32px);
+        left: 16px;
+        transform: none;
+        bottom: 16px;
+        max-width: none;
+        padding: 8px 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -369,9 +427,10 @@
     <div id="left-sidebar" class="sidebar">
       <!-- Control Panel (Admin control & login info) -->
       <div id="control-panel" class="overlay-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 16px;">
+          <!-- Role display -->
           <h3 id="role-title" style="font-size: 16px; font-weight: 800; margin: 0;">Admin Mode</h3>
-          <span id="user-display" class="user-badge" style="font-size: 11px; padding: 2px 8px; background: rgba(59, 130, 246, 0.15); color: var(--accent-color); border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">admin</span>
+          <span id="user-display" class="user-badge" style="display: inline-block; max-width: 240px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 11px; padding: 2px 8px; background: rgba(59, 130, 246, 0.15); color: var(--accent-color); border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">admin</span>
         </div>
         
         <!-- Admin Controls -->
@@ -516,6 +575,11 @@
           <option value="0">Unassigned</option>
         </select>
       </div>
+    </div>
+
+    <!-- Map Legend Footer -->
+    <div id="map-legend-container" class="map-legend-container">
+      <div class="map-legend-content" id="map-legend-content"></div>
     </div>
 
     <!-- Floating Action Buttons -->

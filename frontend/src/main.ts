@@ -1,5 +1,5 @@
 import { MapEngine, CountryAssignment } from './mapEngine';
-import { exportMapToPDF } from './pdfExport';
+import { exportMapToPDF, LegendItem } from './pdfExport';
 import { COUNTRY_NAMES } from './countryNames';
 
 // State Interfaces
@@ -75,6 +75,10 @@ class AppController {
 
   private pdfExportBtn = document.getElementById('pdf-export-btn') as HTMLButtonElement;
   private tableViewBtn = document.getElementById('table-view-btn') as HTMLButtonElement;
+  private mapLegendContainer = document.getElementById('map-legend-container') as HTMLElement;
+  private mapLegendContent = document.getElementById('map-legend-content') as HTMLElement;
+  private repName = '';
+  private repColor = '';
 
   constructor() {
     this.initEvents();
@@ -132,6 +136,7 @@ class AppController {
       this.createRepForm.reset();
       this.editRepForm.reset();
       document.getElementById('map-container')?.classList.remove('admin-mode');
+      this.mapLegendContainer.style.display = 'none';
     });
 
     // Toggle Change Password
@@ -231,8 +236,16 @@ class AppController {
       const originalText = this.pdfExportBtn.innerHTML;
       this.pdfExportBtn.innerHTML = '...';
 
+      // Collect current legend items depending on role
+      let legendItems: LegendItem[] = [];
+      if (this.role === 'admin') {
+        legendItems = this.representatives.map(r => ({ name: r.name, color_hex: r.color_hex }));
+      } else if (this.role === 'representative' && this.repName) {
+        legendItems = [{ name: this.repName, color_hex: this.repColor }];
+      }
+
       try {
-        await exportMapToPDF(svg);
+        await exportMapToPDF(svg, legendItems);
       } catch (err: any) {
         console.error('PDF Export error:', err);
         alert('Failed to generate PDF: ' + err.message);
@@ -500,6 +513,8 @@ class AppController {
           adminOpt.textContent = rep.name;
           this.adminRepSelect.appendChild(adminOpt);
         });
+
+        this.updateLegendUI(this.representatives.map(r => ({ name: r.name, color_hex: r.color_hex })));
       }
     } catch (err) {
       console.error('Fetch representatives error:', err);
@@ -523,6 +538,12 @@ class AppController {
       const res = await apiFetch('/api/representative/state');
       const data = await res.json();
       if (res.ok && this.mapEngine) {
+        this.repName = data.name;
+        this.repColor = data.colorHex;
+
+        // Update Legend Footer
+        this.updateLegendUI([{ name: this.repName, color_hex: this.repColor }]);
+
         // Construct standard assignments structure for rendering
         const assignments: CountryAssignment[] = data.assignedCountries.map((code: string) => ({
           country_code: code,
@@ -806,6 +827,36 @@ class AppController {
     const g = parseInt(match[1], 10);
     const b = parseInt(match[2], 10);
     return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+
+  private updateLegendUI(items: { name: string; color_hex: string }[]): void {
+    if (!this.mapLegendContent) return;
+    this.mapLegendContent.innerHTML = '';
+    
+    if (items.length > 0) {
+      this.mapLegendContainer.style.display = 'flex';
+      
+      // Sort items alphabetically by name
+      const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+
+      sorted.forEach(item => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'legend-item';
+        
+        const dotSpan = document.createElement('span');
+        dotSpan.className = 'legend-dot';
+        dotSpan.style.backgroundColor = item.color_hex;
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = item.name;
+        
+        itemDiv.appendChild(dotSpan);
+        itemDiv.appendChild(nameSpan);
+        this.mapLegendContent.appendChild(itemDiv);
+      });
+    } else {
+      this.mapLegendContainer.style.display = 'none';
+    }
   }
 }
 
