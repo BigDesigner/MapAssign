@@ -161,6 +161,22 @@ export default {
         return jsonResponse({ error: 'Unauthorized session.' }, 401, headers);
       }
 
+      // 3. GET /api/auth/me — restore session on page refresh
+      if (url.pathname === '/api/auth/me' && request.method === 'GET') {
+        if (session.role === 'admin') {
+          return jsonResponse({ role: 'admin', name: env.ADMIN_USERNAME || 'admin' }, 200, headers);
+        } else if (session.role === 'representative' && session.id) {
+          const rep = await env.DB.prepare(
+            'SELECT name FROM representatives WHERE id = ?'
+          ).bind(session.id).first<{ name: string }>();
+          return jsonResponse({
+            role: 'representative',
+            name: rep ? rep.name : 'Representative'
+          }, 200, headers);
+        }
+        return jsonResponse({ error: 'Unknown session role.' }, 400, headers);
+      }
+
       // 3. GET /api/map/state
       if (url.pathname === '/api/map/state' && request.method === 'GET') {
         // Available for both admin and representatives (representatives read-only, but let's keep it secure)

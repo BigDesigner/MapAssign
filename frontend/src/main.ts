@@ -810,6 +810,19 @@ class AppController {
 }
 
 // Start application
-window.addEventListener('DOMContentLoaded', () => {
-  new AppController();
+window.addEventListener('DOMContentLoaded', async () => {
+  const app = new AppController();
+  // Try to restore session from existing cookie
+  try {
+    const res = await apiFetch('/api/auth/me');
+    if (res.ok) {
+      const data = await res.json() as { role: string; name: string };
+      (app as any).role = data.role as 'admin' | 'representative';
+      (app as any).currentUsernameOrName = data.name;
+      await (app as any).bootstrapApp();
+    }
+    // If 401 → session expired, stay on login screen
+  } catch {
+    // Network error → stay on login screen
+  }
 });
