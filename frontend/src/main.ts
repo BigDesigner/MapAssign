@@ -619,12 +619,12 @@ class AppController {
               if (el) {
                 if (el.tagName.toLowerCase() === 'path') {
                   (el as SVGPathElement).style.stroke = '#334155';
-                  (el as SVGPathElement).style.strokeWidth = '0.5px';
+                  (el as SVGPathElement).style.strokeWidth = '0.2px';
                 } else {
                   const subpaths = el.querySelectorAll('path');
                   subpaths.forEach(p => {
                     p.style.stroke = '#334155';
-                    p.style.strokeWidth = '0.5px';
+                    p.style.strokeWidth = '0.2px';
                   });
                 }
               }
