@@ -1,0 +1,48 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker and Pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-level: 20
+          cache: 'npm'
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      # --- 1. Deploy Cloudflare Worker (Backend) ---
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: '.'
+          command: deploy
+
+      # --- 2. Build & Deploy Cloudflare Pages (Frontend) ---
+      - name: Install Frontend Dependencies
+        run: npm ci --prefix frontend
+
+      - name: Build Frontend
+        run: npm run frontend:build
+
+      - name: Deploy Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 'map-assign-frontend' # Update this to match your Cloudflare Pages project name
+          directory: 'frontend/dist'
+          gitBranch: 'main'
