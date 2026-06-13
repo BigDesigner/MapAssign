@@ -403,52 +403,53 @@
     async function loadData() {
       showState('loading');
       try {
-        // Try admin endpoint first
-        let res = await apiFetch('/api/map/state', { method: 'GET' });
-
-        if (res.status === 401) {
+        // Fetch current user details to check authentication and role
+        const meRes = await apiFetch('/api/auth/me');
+        if (meRes.status === 401) {
           showState('auth');
           return;
         }
+        if (!meRes.ok) {
+          showState('auth');
+          return;
+        }
+        const meData = await meRes.json();
+        role = meData.role; // 'admin' or 'representative'
 
-        if (res.status === 403) {
-          // Must be representative — use representative endpoint
-          role = 'representative';
-          res = await apiFetch('/api/representative/state', { method: 'GET' });
-          if (!res.ok) { showState('auth'); return; }
-          const data = await res.json();
+        if (role === 'admin') {
+          roleBadge.textContent = 'YÖNETİCİ';
+          roleBadge.style.color = '#38bdf8'; // sky-400
+          roleBadge.style.borderColor = 'rgba(56,189,248,0.3)';
+          roleBadge.style.background = 'rgba(56,189,248,0.1)';
+        } else {
           roleBadge.textContent = 'TEMSİLCİ';
-          roleBadge.style.color = '#a3e635';
+          roleBadge.style.color = '#a3e635'; // lime-400
           roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
           roleBadge.style.background = 'rgba(163,230,53,0.1)';
-          // Build rows from rep state (only own countries)
-          allRows = (data.assignedCountries || []).map((code, i) => ({
-            no: i + 1,
-            rep: data.name,
-            code: code.toLowerCase(),
-            name: COUNTRY_NAMES[code.toLowerCase()] || code.toUpperCase(),
-            color: data.colorHex,
-          }));
-        } else {
-          // Admin
-          role = 'admin';
-          const data = await res.json();
-          roleBadge.textContent = 'YÖNETİCİ';
-          const assignments = data.assignments || [];
-          // Group by rep name then sort
-          const sorted = [...assignments].sort((a, b) =>
-            String(a.name).localeCompare(String(b.name), 'en') ||
-            String(COUNTRY_NAMES[a.country_code] || a.country_code).localeCompare(
-              COUNTRY_NAMES[b.country_code] || b.country_code, 'en')
-          );
-          allRows = sorted.map((row, i) => ({
-            no: i + 1,
-            rep: row.name,
-            code: (row.country_code || '').toLowerCase(),
-            name: COUNTRY_NAMES[(row.country_code || '').toLowerCase()] || (row.country_code || '').toUpperCase(),
-            color: row.color_hex,
-          }));
         }
+
+        // Fetch all assignments for map state (accessible to both roles now)
+        const res = await apiFetch('/api/map/state');
+        if (!res.ok) {
+          showState('auth');
+          return;
+        }
+        const data = await res.json();
+        const assignments = data.assignments || [];
+        
+        // Group by rep name then sort using Turkish localeCompare
+        const sorted = [...assignments].sort((a, b) =>
+          String(a.name).localeCompare(String(b.name), 'tr') ||
+          String(COUNTRY_NAMES[a.country_code] || a.country_code).localeCompare(
+            COUNTRY_NAMES[b.country_code] || b.country_code, 'tr')
+        );
+        allRows = sorted.map((row, i) => ({
+          no: i + 1,
+          rep: row.name,
+          code: (row.country_code || '').toLowerCase(),
+          name: COUNTRY_NAMES[(row.country_code || '').toLowerCase()] || (row.country_code || '').toUpperCase(),
+          color: row.color_hex,
+        }));
       } catch (e) {
         console.error(e);
         showState('auth');

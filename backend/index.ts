@@ -194,10 +194,9 @@ export default {
 
       // 3. GET /api/map/state
       if (url.pathname === '/api/map/state' && request.method === 'GET') {
-        // Available for both admin and representatives (representatives read-only, but let's keep it secure)
-        // Admin gets the whole state with representatives list
-        if (session.role !== 'admin') {
-          return jsonResponse({ error: 'Forbidden. Admin role required.' }, 403, headers);
+        // Allow both admin and representative roles to view map state
+        if (session.role !== 'admin' && session.role !== 'representative') {
+          return jsonResponse({ error: 'Forbidden. Authorized session required.' }, 403, headers);
         }
 
         const assignments = await env.DB.prepare(

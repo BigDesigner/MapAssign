@@ -1,4 +1,4 @@
-import { MapEngine, CountryAssignment } from './mapEngine';
+import { MapEngine } from './mapEngine';
 import { exportMapToPNG, LegendItem } from './pdfExport';
 import { COUNTRY_NAMES } from './countryNames';
 
@@ -544,123 +544,137 @@ class AppController {
 
   private async loadMapStateRepresentative(): Promise<void> {
     try {
-      const res = await apiFetch('/api/representative/state');
-      const data = await res.json();
-      if (res.ok && this.mapEngine) {
-        this.repName = data.name;
-        this.repColor = data.colorHex;
+      // 1. Fetch representative's own state for sidebar
+      const repRes = await apiFetch('/api/representative/state');
+      const repData = await repRes.json();
+      if (!repRes.ok) {
+        console.error('Load representative own state failed');
+        return;
+      }
+      this.repName = repData.name;
+      this.repColor = repData.colorHex;
 
-        // Update Legend Footer
-        this.updateLegendUI([{ name: this.repName, color_hex: this.repColor }]);
+      // 2. Fetch all assignments for the map
+      const mapRes = await apiFetch('/api/map/state');
+      const mapData = await mapRes.json();
+      if (mapRes.ok && this.mapEngine) {
+        // Render all assignments on the map!
+        this.mapEngine.updateColors(mapData.assignments);
 
-        // Construct standard assignments structure for rendering
-        const assignments: CountryAssignment[] = data.assignedCountries.map((code: string) => ({
-          country_code: code,
-          color_hex: data.colorHex,
-          name: data.name
-        }));
-        this.mapEngine.updateColors(assignments);
+        // Update Legend Footer with all active representatives
+        const uniqueRepsMap = new Map<number, { name: string, color_hex: string }>();
+        // Add own rep first to ensure it's in the list even if 0 assignments
+        uniqueRepsMap.set(0, { name: this.repName, color_hex: this.repColor });
+        
+        const assignmentsList: any[] = mapData.assignments || [];
+        assignmentsList.forEach((a: any) => {
+          uniqueRepsMap.set(a.representative_id, { name: a.name, color_hex: a.color_hex });
+        });
+        
+        const uniqueReps = Array.from(uniqueRepsMap.values())
+          .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+        this.updateLegendUI(uniqueReps);
+      }
 
-        // Sort and display assigned countries panel
-        if (data.assignedCountries && data.assignedCountries.length > 0) {
-          this.repCountriesPanel.style.display = 'block';
-          this.repCountriesCount.textContent = data.assignedCountries.length.toString();
+      // 3. Sort and display assigned countries panel (for representative's own countries)
+      if (repData.assignedCountries && repData.assignedCountries.length > 0) {
+        this.repCountriesPanel.style.display = 'block';
+        this.repCountriesCount.textContent = repData.assignedCountries.length.toString();
 
-          const mappedCountries = data.assignedCountries.map((code: string) => {
-            const lowerCode = code.toLowerCase();
-            const fullName = COUNTRY_NAMES[lowerCode] || code.toUpperCase();
-            return { code: lowerCode, name: fullName };
+        const mappedCountries = repData.assignedCountries.map((code: string) => {
+          const lowerCode = code.toLowerCase();
+          const fullName = COUNTRY_NAMES[lowerCode] || code.toUpperCase();
+          return { code: lowerCode, name: fullName };
+        });
+
+        // Sort alphabetically by full name, using Turkish locale collation
+        mappedCountries.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr'));
+
+        this.repCountriesList.innerHTML = '';
+        mappedCountries.forEach((c: any) => {
+          const li = document.createElement('li');
+          li.style.display = 'flex';
+          li.style.justifyContent = 'space-between';
+          li.style.alignItems = 'center';
+          li.style.padding = '6px 8px';
+          li.style.borderRadius = '6px';
+          li.style.background = 'rgba(255, 255, 255, 0.02)';
+          li.style.border = '1px solid rgba(255, 255, 255, 0.03)';
+          li.style.cursor = 'pointer';
+          li.style.transition = 'background 0.2s ease, border-color 0.2s ease';
+
+          li.innerHTML = `
+            <span style="font-weight: 500;">${c.name}</span>
+            <span style="font-size: 11px; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px;">${c.code.toUpperCase()}</span>
+          `;
+
+          // Hover interactions to highlight path/group
+          li.addEventListener('mouseenter', () => {
+            li.style.background = 'rgba(255, 255, 255, 0.05)';
+            li.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
+            if (el) {
+              if (el.tagName.toLowerCase() === 'path') {
+                (el as SVGPathElement).style.stroke = '#ffffff';
+                (el as SVGPathElement).style.strokeWidth = '1.5px';
+              } else {
+                const subpaths = el.querySelectorAll('path');
+                subpaths.forEach(p => {
+                  p.style.stroke = '#ffffff';
+                  p.style.strokeWidth = '1.5px';
+                });
+              }
+            }
           });
 
-          // Sort alphabetically by full name, using Turkish locale collation
-          mappedCountries.sort((a: any, b: any) => a.name.localeCompare(b.name, 'tr'));
-
-          this.repCountriesList.innerHTML = '';
-          mappedCountries.forEach((c: any) => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            li.style.justifyContent = 'space-between';
-            li.style.alignItems = 'center';
-            li.style.padding = '6px 8px';
-            li.style.borderRadius = '6px';
+          li.addEventListener('mouseleave', () => {
             li.style.background = 'rgba(255, 255, 255, 0.02)';
-            li.style.border = '1px solid rgba(255, 255, 255, 0.03)';
-            li.style.cursor = 'pointer';
-            li.style.transition = 'background 0.2s ease, border-color 0.2s ease';
-
-            li.innerHTML = `
-              <span style="font-weight: 500;">${c.name}</span>
-              <span style="font-size: 11px; color: var(--text-muted); background: rgba(255, 255, 255, 0.05); padding: 2px 6px; border-radius: 4px;">${c.code.toUpperCase()}</span>
-            `;
-
-            // Hover interactions to highlight path/group
-            li.addEventListener('mouseenter', () => {
-              li.style.background = 'rgba(255, 255, 255, 0.05)';
-              li.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
-              if (el) {
-                if (el.tagName.toLowerCase() === 'path') {
-                  (el as SVGPathElement).style.stroke = '#ffffff';
-                  (el as SVGPathElement).style.strokeWidth = '1.5px';
-                } else {
-                  const subpaths = el.querySelectorAll('path');
-                  subpaths.forEach(p => {
-                    p.style.stroke = '#ffffff';
-                    p.style.strokeWidth = '1.5px';
-                  });
-                }
+            li.style.borderColor = 'rgba(255, 255, 255, 0.03)';
+            const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
+            if (el) {
+              if (el.tagName.toLowerCase() === 'path') {
+                (el as SVGPathElement).style.stroke = '#334155';
+                (el as SVGPathElement).style.strokeWidth = '0.08px';
+              } else {
+                const subpaths = el.querySelectorAll('path');
+                subpaths.forEach(p => {
+                  p.style.stroke = '#334155';
+                  p.style.strokeWidth = '0.08px';
+                });
               }
-            });
-
-            li.addEventListener('mouseleave', () => {
-              li.style.background = 'rgba(255, 255, 255, 0.02)';
-              li.style.borderColor = 'rgba(255, 255, 255, 0.03)';
-              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
-              if (el) {
-                if (el.tagName.toLowerCase() === 'path') {
-                  (el as SVGPathElement).style.stroke = '#334155';
-                  (el as SVGPathElement).style.strokeWidth = '0.08px';
-                } else {
-                  const subpaths = el.querySelectorAll('path');
-                  subpaths.forEach(p => {
-                    p.style.stroke = '#334155';
-                    p.style.strokeWidth = '0.08px';
-                  });
-                }
-              }
-            });
-
-            // Click interaction to pulse path/group
-            li.addEventListener('click', () => {
-              const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
-              if (el && this.mapEngine) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                // Pulse effect
-                let count = 0;
-                const pathsToPulse = el.tagName.toLowerCase() === 'path' ? [el as SVGPathElement] : Array.from(el.querySelectorAll('path'));
-                const originalFills = pathsToPulse.map(p => p.style.fill || '');
-
-                const interval = setInterval(() => {
-                  pathsToPulse.forEach((p, idx) => {
-                    p.style.fill = count % 2 === 0 ? '#ffffff' : originalFills[idx];
-                  });
-                  count++;
-                  if (count > 5) {
-                    clearInterval(interval);
-                    pathsToPulse.forEach((p, idx) => {
-                      p.style.fill = originalFills[idx];
-                    });
-                  }
-                }, 200);
-              }
-            });
-
-            this.repCountriesList.appendChild(li);
+            }
           });
-        } else {
-          this.repCountriesPanel.style.display = 'none';
-        }
+
+          // Click interaction to pulse path/group
+          li.addEventListener('click', () => {
+            const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
+            if (el && this.mapEngine) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+              // Pulse effect
+              let count = 0;
+              const pathsToPulse = el.tagName.toLowerCase() === 'path' ? [el as SVGPathElement] : Array.from(el.querySelectorAll('path'));
+              const originalFills = pathsToPulse.map(p => p.style.fill || '');
+
+              const interval = setInterval(() => {
+                pathsToPulse.forEach((p, idx) => {
+                  p.style.fill = count % 2 === 0 ? '#ffffff' : originalFills[idx];
+                });
+                count++;
+                if (count > 5) {
+                  clearInterval(interval);
+                  pathsToPulse.forEach((p, idx) => {
+                    p.style.fill = originalFills[idx];
+                  });
+                }
+              }, 200);
+            }
+          });
+
+          this.repCountriesList.appendChild(li);
+        });
+      } else {
+        this.repCountriesPanel.style.display = 'none';
       }
     } catch (err) {
       console.error('Load rep map state error:', err);
