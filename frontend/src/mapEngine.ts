@@ -368,6 +368,17 @@ export class MapEngine {
           // It's a group <g id="US">
           const subpaths = element.querySelectorAll('path');
           subpaths.forEach(p => {
+            // Avoid coloring paths that belong to nested country groups
+            let parent = p.parentElement;
+            while (parent && parent !== element) {
+              if (parent.tagName.toLowerCase() === 'g') {
+                const id = parent.id || parent.getAttribute('id') || '';
+                if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                  return; // Skip this path as it belongs to a nested country group
+                }
+              }
+              parent = parent.parentElement;
+            }
             p.style.fill = assign.color_hex;
           });
         }
@@ -404,6 +415,17 @@ export class MapEngine {
       } else {
         const subpaths = element.querySelectorAll('path');
         subpaths.forEach(p => {
+          // Avoid coloring paths that belong to nested country groups
+          let parent = p.parentElement;
+          while (parent && parent !== element) {
+            if (parent.tagName.toLowerCase() === 'g') {
+              const id = parent.id || parent.getAttribute('id') || '';
+              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                return; // Skip this path as it belongs to a nested country group
+              }
+            }
+            parent = parent.parentElement;
+          }
           p.style.fill = fillVal;
         });
       }

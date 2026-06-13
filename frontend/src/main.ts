@@ -635,7 +635,19 @@ class AppController {
                 (el as SVGPathElement).style.stroke = '#ffffff';
                 (el as SVGPathElement).style.strokeWidth = '1.5px';
               } else {
-                const subpaths = el.querySelectorAll('path');
+                const subpaths = Array.from(el.querySelectorAll('path')).filter(p => {
+                  let parent = p.parentElement;
+                  while (parent && (parent as any) !== el) {
+                    if (parent.tagName.toLowerCase() === 'g') {
+                      const id = parent.id || parent.getAttribute('id') || '';
+                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                        return false;
+                      }
+                    }
+                    parent = parent.parentElement;
+                  }
+                  return true;
+                });
                 subpaths.forEach(p => {
                   p.style.stroke = '#ffffff';
                   p.style.strokeWidth = '1.5px';
@@ -653,7 +665,19 @@ class AppController {
                 (el as SVGPathElement).style.stroke = '#334155';
                 (el as SVGPathElement).style.strokeWidth = '0.08px';
               } else {
-                const subpaths = el.querySelectorAll('path');
+                const subpaths = Array.from(el.querySelectorAll('path')).filter(p => {
+                  let parent = p.parentElement;
+                  while (parent && (parent as any) !== el) {
+                    if (parent.tagName.toLowerCase() === 'g') {
+                      const id = parent.id || parent.getAttribute('id') || '';
+                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                        return false;
+                      }
+                    }
+                    parent = parent.parentElement;
+                  }
+                  return true;
+                });
                 subpaths.forEach(p => {
                   p.style.stroke = '#334155';
                   p.style.strokeWidth = '0.08px';
@@ -670,7 +694,21 @@ class AppController {
 
               // Pulse effect
               let count = 0;
-              const pathsToPulse = el.tagName.toLowerCase() === 'path' ? [el as SVGPathElement] : Array.from(el.querySelectorAll('path'));
+              const pathsToPulse = el.tagName.toLowerCase() === 'path'
+                ? [el as SVGPathElement]
+                : Array.from(el.querySelectorAll('path')).filter(p => {
+                    let parent = p.parentElement;
+                    while (parent && (parent as any) !== el) {
+                      if (parent.tagName.toLowerCase() === 'g') {
+                        const id = parent.id || parent.getAttribute('id') || '';
+                        if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                          return false;
+                        }
+                      }
+                      parent = parent.parentElement;
+                    }
+                    return true;
+                  });
               const originalFills = pathsToPulse.map(p => p.style.fill || '');
 
               const interval = setInterval(() => {
