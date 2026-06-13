@@ -16,6 +16,15 @@
 - [x] Docs klasörü (agent.md, guardrails.md, task.md, architecture.md)
 - [x] Sayfa yenilemede oturum koruma (`GET /api/auth/me` session restore)
 - [x] Menüler ve tooltipler kaybolma bug'ının çözülmesi (Eksik DOM ID'lerinden kaynaklanan TypeError çökmesi giderildi)
+- [x] Temsilcilerin kendi panellerinde sadece kendi ülkelerini listelerken harita ve tabloda tüm atamaları görebilmesi
+- [x] İskoçya sınırları içerisindeki pembe nokta ve bölge sınır çizgilerinin temizlenmesi
+- [x] Admin panelinde temsilci kodu (kullanıcı adı) düzenleme desteği
+- [x] Temsilci listesinde ve legend kısmında her temsilcinin kaç ülkeye atandığının gösterilmesi `(X ülke)`
+- [x] Somaliland (`XS`), Kosova (`XK`) ve Kuzey Kıbrıs (`XC`) ülke mapping'lerinin ve isimlerinin eklenmesi
+- [x] Footer alanının "Design & Development: GNNlabs" olarak İngilizceye çevrilmesi ve PNG export için upscale özelliğinin devre dışı bırakılması
+- [x] SVG haritada Somaliland (`xs-`), Kosova (`xk-`) ve Kuzey Kıbrıs (`xc-`) path'lerinin görünür kılınması ve renklendirilebilir hale getirilmesi
+- [x] Kıbrıs (`CY`), Somaliland ve Kosova için iç içe (nested) ülke renklendirme ve üzerine gelme (hover) çakışmalarının çözülmesi (Kuzey Kıbrıs renklendirildiğinde Güney Kıbrıs'ın veya tam tersinin etkilenmemesi)
+- [x] Admin panelinde temsilci silme butonunun belirginleştirilmesi (arka plan renginin koyu kırmızı yapılması ve simge olarak temiz bir beyaz unicode `✕` kullanılması)
 
 ## 🔄 Devam Eden / Bekleyen
 - [ ] Cloudflare Pages Web Analytics beacon CORS uyarısı (Cloudflare tarafı, bizim kontrolümüzde değil)

@@ -15,6 +15,7 @@
 - ❌ `main.ts` dışında API çağrısı yapmama — tüm fetch işlemleri `apiFetch()` üzerinden geçmeli (credentials)
 - ❌ `table.html`'i `index.html`'e gömme — ayrı page olarak kalmalı (session cookie her ikisi için çalışır)
 - ❌ `index.html` içerisindeki kontrol paneli (`#control-panel`) elementlerinin DOM ID'lerini (`role-title`, `user-display`, `admin-controls`) kaldırma veya değiştirme — `main.ts` içerisinde arayüz başlatılması (`bootstrapApp`) için zorunludur ve kaldırılması tüm uygulamanın çökmesine neden olur.
+- ❌ İç içe (nested) SVG gruplarını (örn. `<g id="CY">` içindeki `<g id="xc">` gibi) renklendirirken en yakın `g[id]` atası hedef grup olmayan alt path'leri `querySelectorAll('path')` ile boyama — bu durum alt/komşu bölgelerin yanlışlıkla üst grup rengine boyanmasına neden olur.
 
 ## Backend
 
