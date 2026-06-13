@@ -76,11 +76,6 @@
       transition: fill 0.25s ease, stroke 0.25s ease;
     }
 
-    /* Birleşik Krallık alt bölgelerinin iç sınırlarını (ilçe/eyalet çizgileri) gizle */
-    g[id^="GB-"] path {
-      stroke: #1e293b;
-      stroke-width: 0.2px;
-    }
 
     /* SVG harita arka planını ve okyanusu görünmez yaparak koyu tema uyumunu sağla */
     #World, #Ocean {
@@ -98,12 +93,6 @@
       stroke: #64748b;
     }
 
-    /* Hover durumunda Birleşik Krallık iç sınırlarını gizle */
-    .admin-mode g[id^="GB-"]:hover path {
-      fill: #475569;
-      stroke: #475569 !important;
-      stroke-width: 0.2px !important;
-    }
 
     /* Interactive Overlay Panel (Floating) */
     .overlay-panel {
