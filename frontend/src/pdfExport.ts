@@ -63,8 +63,8 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
       const width = w || svgElement.clientWidth || 800;
       const height = h || svgElement.clientHeight || 600;
 
-      // Define 4x scale for high resolution
-      const scale = 4;
+      // Define 1x scale (no upscaling)
+      const scale = 1;
       const exportWidth = width * scale;
       const exportHeight = height * scale;
 
