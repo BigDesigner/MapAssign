@@ -366,9 +366,9 @@ export default {
         } 
         
         else if (action === 'update') {
-          const { id, name, color, password } = body;
+          const { id, code, name, color, password } = body;
 
-          if (!id || !name || !color) {
+          if (!id || !code || !name || !color) {
             return jsonResponse({ error: 'Missing representative parameters.' }, 400, headers);
           }
 
@@ -376,26 +376,30 @@ export default {
             return jsonResponse({ error: 'Invalid hex color format.' }, 400, headers);
           }
 
+          const cleanCode = sanitizeInput(code.trim());
           const cleanName = sanitizeInput(name.trim());
 
           try {
             if (password && password.trim() !== '') {
               const passwordHash = await hashPassword(password);
               await env.DB.prepare(
-                'UPDATE representatives SET name = ?, color_hex = ?, password_hash = ? WHERE id = ?'
+                'UPDATE representatives SET representative_code = ?, name = ?, color_hex = ?, password_hash = ? WHERE id = ?'
               )
-                .bind(cleanName, color, passwordHash, id)
+                .bind(cleanCode, cleanName, color, passwordHash, id)
                 .run();
             } else {
               await env.DB.prepare(
-                'UPDATE representatives SET name = ?, color_hex = ? WHERE id = ?'
+                'UPDATE representatives SET representative_code = ?, name = ?, color_hex = ? WHERE id = ?'
               )
-                .bind(cleanName, color, id)
+                .bind(cleanCode, cleanName, color, id)
                 .run();
             }
 
             return jsonResponse({ success: true, message: 'Representative updated.' }, 200, headers);
           } catch (e: any) {
+            if (e.message && e.message.includes('UNIQUE')) {
+              return jsonResponse({ error: 'Representative code already exists.' }, 409, headers);
+            }
             return jsonResponse({ error: 'Database error occurred: ' + e.message }, 500, headers);
           }
         }

@@ -1,6 +1,7 @@
 export interface LegendItem {
   name: string;
   color_hex: string;
+  count?: number;
 }
 
 export function sanitizeSVG(svgClone: SVGSVGElement): void {
@@ -108,7 +109,8 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
             let currentY = 25 * scale; // Relative to legend start
 
             legendItems.forEach(item => {
-              const textWidth = ctx.measureText(item.name).width;
+              const displayName = `${item.name} (${item.count !== undefined ? item.count : 0})`;
+              const textWidth = ctx.measureText(displayName).width;
               const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
 
               if (currentX + itemWidth > exportWidth - startX && currentX > startX) {
@@ -145,7 +147,8 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
             let currentY = exportHeight + 25 * scale;
 
             legendItems.forEach(item => {
-              const textWidth = ctx.measureText(item.name).width;
+              const displayName = `${item.name} (${item.count !== undefined ? item.count : 0})`;
+              const textWidth = ctx.measureText(displayName).width;
               const itemWidth = (dotRadius * 2) + dotToTextGap + textWidth;
 
               if (currentX + itemWidth > exportWidth - startX && currentX > startX) {
@@ -168,7 +171,7 @@ export function exportMapToPNG(svgElement: SVGSVGElement, legendItems: LegendIte
               ctx.fillStyle = '#f8fafc';
               ctx.textAlign = 'left';
               ctx.textBaseline = 'middle';
-              ctx.fillText(item.name, currentX + (dotRadius * 2) + dotToTextGap, currentY);
+              ctx.fillText(displayName, currentX + (dotRadius * 2) + dotToTextGap, currentY);
 
               currentX += itemWidth + itemGap;
             });

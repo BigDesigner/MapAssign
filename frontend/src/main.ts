@@ -26,6 +26,7 @@ class AppController {
   
   // Cache lists
   private representatives: Representative[] = [];
+  private assignments: any[] = [];
   private selectedCountryCode = '';
 
   // Elements
@@ -65,6 +66,7 @@ class AppController {
   private repEditSection = document.getElementById('rep-edit-section') as HTMLElement;
   private repCreateSection = document.getElementById('rep-create-section') as HTMLElement;
   private editRepForm = document.getElementById('edit-rep-form') as HTMLFormElement;
+  private editRepCode = document.getElementById('edit-rep-code') as HTMLInputElement;
   private editRepName = document.getElementById('edit-rep-name') as HTMLInputElement;
   private editRepColor = document.getElementById('edit-rep-color') as HTMLInputElement;
   private editRepPass = document.getElementById('edit-rep-pass') as HTMLInputElement;
@@ -240,13 +242,36 @@ class AppController {
       const originalText = this.pdfExportBtn.innerHTML;
       this.pdfExportBtn.innerHTML = '...';
 
-      // Collect current legend items depending on role
+      // Collect current legend items depending on role with counts
+      const counts = new Map<string, number>();
+      this.assignments.forEach((a: any) => {
+        counts.set(a.name, (counts.get(a.name) || 0) + 1);
+      });
+
       let legendItems: LegendItem[] = [];
       if (this.role === 'admin') {
-        legendItems = this.representatives.map(r => ({ name: r.name, color_hex: r.color_hex }));
+        legendItems = this.representatives.map(r => ({
+          name: r.name,
+          color_hex: r.color_hex,
+          count: counts.get(r.name) || 0
+        }));
       } else if (this.role === 'representative' && this.repName) {
-        legendItems = [{ name: this.repName, color_hex: this.repColor }];
+        const uniqueRepsMap = new Map<string, { name: string, color_hex: string }>();
+        uniqueRepsMap.set(this.repName, { name: this.repName, color_hex: this.repColor });
+        
+        this.assignments.forEach((a: any) => {
+          uniqueRepsMap.set(a.name, { name: a.name, color_hex: a.color_hex });
+        });
+
+        legendItems = Array.from(uniqueRepsMap.values()).map(r => ({
+          name: r.name,
+          color_hex: r.color_hex,
+          count: counts.get(r.name) || 0
+        }));
       }
+      
+      // Sort legend items alphabetically to match UI legend
+      legendItems.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
 
       try {
         await exportMapToPNG(svg, legendItems);
@@ -330,6 +355,7 @@ class AppController {
       const repId = parseInt(this.adminRepSelect.value, 10);
       if (!repId || isNaN(repId)) return;
 
+      const code = this.editRepCode.value.trim();
       const name = this.editRepName.value.trim();
       const color = this.editRepColor.value;
       const password = this.editRepPass.value;
@@ -341,6 +367,7 @@ class AppController {
           body: JSON.stringify({
             action: 'update',
             id: repId,
+            code,
             name,
             color,
             password: password ? password : undefined
@@ -523,7 +550,7 @@ class AppController {
           this.adminRepSelect.appendChild(adminOpt);
         });
 
-        this.updateLegendUI(this.representatives.map(r => ({ name: r.name, color_hex: r.color_hex })));
+        this.updateLegend();
       }
     } catch (err) {
       console.error('Fetch representatives error:', err);
@@ -535,7 +562,9 @@ class AppController {
       const res = await apiFetch('/api/map/state');
       const data = await res.json();
       if (res.ok && this.mapEngine) {
-        this.mapEngine.updateColors(data.assignments);
+        this.assignments = data.assignments || [];
+        this.mapEngine.updateColors(this.assignments);
+        this.updateLegend();
       }
     } catch (err) {
       console.error('Load admin map state error:', err);
@@ -558,22 +587,10 @@ class AppController {
       const mapRes = await apiFetch('/api/map/state');
       const mapData = await mapRes.json();
       if (mapRes.ok && this.mapEngine) {
+        this.assignments = mapData.assignments || [];
         // Render all assignments on the map!
-        this.mapEngine.updateColors(mapData.assignments);
-
-        // Update Legend Footer with all active representatives
-        const uniqueRepsMap = new Map<number, { name: string, color_hex: string }>();
-        // Add own rep first to ensure it's in the list even if 0 assignments
-        uniqueRepsMap.set(0, { name: this.repName, color_hex: this.repColor });
-        
-        const assignmentsList: any[] = mapData.assignments || [];
-        assignmentsList.forEach((a: any) => {
-          uniqueRepsMap.set(a.representative_id, { name: a.name, color_hex: a.color_hex });
-        });
-        
-        const uniqueReps = Array.from(uniqueRepsMap.values())
-          .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-        this.updateLegendUI(uniqueReps);
+        this.mapEngine.updateColors(this.assignments);
+        this.updateLegend();
       }
 
       // 3. Sort and display assigned countries panel (for representative's own countries)
@@ -694,6 +711,7 @@ class AppController {
     const rep = this.representatives.find(r => r.id === repId);
     if (!rep) return;
 
+    this.editRepCode.value = rep.representative_code;
     this.editRepName.value = rep.name;
     this.editRepColor.value = rep.color_hex;
     this.editRepPass.value = '';
@@ -704,7 +722,10 @@ class AppController {
       const res = await apiFetch('/api/map/state');
       const data = await res.json();
       if (res.ok) {
-        const allAssignments = data.assignments as Array<{
+        this.assignments = data.assignments || [];
+        this.updateLegend();
+        
+        const allAssignments = this.assignments as Array<{
           country_code: string;
           representative_id: number;
           name: string;
@@ -856,7 +877,45 @@ class AppController {
     return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
   }
 
-  private updateLegendUI(items: { name: string; color_hex: string }[]): void {
+  private updateLegend(): void {
+    if (!this.mapLegendContent) return;
+    
+    // Group assignments by representative name/id to count countries
+    const counts = new Map<string, number>();
+    this.assignments.forEach((a: any) => {
+      counts.set(a.name, (counts.get(a.name) || 0) + 1);
+    });
+
+    let legendItems: { name: string; color_hex: string; count: number }[] = [];
+
+    if (this.role === 'admin') {
+      legendItems = this.representatives.map(r => ({
+        name: r.name,
+        color_hex: r.color_hex,
+        count: counts.get(r.name) || 0
+      }));
+    } else if (this.role === 'representative') {
+      const uniqueRepsMap = new Map<string, { name: string, color_hex: string }>();
+      // Always include own representative
+      if (this.repName) {
+        uniqueRepsMap.set(this.repName, { name: this.repName, color_hex: this.repColor });
+      }
+      
+      this.assignments.forEach((a: any) => {
+        uniqueRepsMap.set(a.name, { name: a.name, color_hex: a.color_hex });
+      });
+
+      legendItems = Array.from(uniqueRepsMap.values()).map(r => ({
+        name: r.name,
+        color_hex: r.color_hex,
+        count: counts.get(r.name) || 0
+      }));
+    }
+
+    this.updateLegendUI(legendItems);
+  }
+
+  private updateLegendUI(items: { name: string; color_hex: string; count?: number }[]): void {
     if (!this.mapLegendContent) return;
     this.mapLegendContent.innerHTML = '';
     
@@ -875,7 +934,8 @@ class AppController {
         dotSpan.style.backgroundColor = item.color_hex;
         
         const nameSpan = document.createElement('span');
-        nameSpan.textContent = item.name;
+        const count = item.count !== undefined ? item.count : 0;
+        nameSpan.textContent = `${item.name} (${count})`;
         
         itemDiv.appendChild(dotSpan);
         itemDiv.appendChild(nameSpan);
