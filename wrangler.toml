@@ -14,3 +14,6 @@ binding = "DB"
 database_name = "mapassign"
 # You must create this database using: wrangler d1 create map-assign-db
 database_id = "535e995a-3ac8-4cbd-b2f1-0be4fca3c224"
+
+[vars]
+TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
