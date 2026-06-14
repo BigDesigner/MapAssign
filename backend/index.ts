@@ -161,17 +161,23 @@ export default {
         const secretKey = env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA';
 
         try {
+          const verifyParams = new URLSearchParams();
+          verifyParams.append('secret', secretKey);
+          verifyParams.append('response', turnstileToken);
+          verifyParams.append('remoteip', ip);
+
           const verifyRes = await fetch(verifyUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(turnstileToken)}&remoteip=${encodeURIComponent(ip)}`
+            body: verifyParams
           });
 
           const verifyData: any = await verifyRes.json();
           if (!verifyData.success) {
-            return jsonResponse({ error: 'Turnstile doğrulama başarısız oldu. Lütfen tekrar deneyin.' }, 400, headers);
+            console.error('Turnstile verification failed. Error details:', JSON.stringify(verifyData));
+            return jsonResponse({ error: 'Turnstile doğrulama başarısız oldu. Lütfen sitekey ve secret key eşleşmesini kontrol edin.' }, 400, headers);
           }
         } catch (err: any) {
+          console.error('Turnstile verification request failed:', err);
           return jsonResponse({ error: 'Turnstile doğrulama servisinde hata oluştu: ' + err.message }, 500, headers);
         }
 
