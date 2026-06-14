@@ -110,6 +110,7 @@ class AppController {
 
   constructor() {
     this.initEvents();
+    this.initTurnstile();
   }
 
   private initEvents(): void {
@@ -118,12 +119,15 @@ class AppController {
       e.preventDefault();
       const usernameOrCode = this.usernameInput.value.trim();
       const password = this.passwordInput.value;
+      const turnstileToken = typeof (window as any).turnstile !== 'undefined'
+        ? (window as any).turnstile.getResponse()
+        : '';
 
       try {
         const res = await apiFetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ usernameOrCode, password })
+          body: JSON.stringify({ usernameOrCode, password, turnstileToken })
         });
 
         const data = await res.json();
@@ -134,10 +138,16 @@ class AppController {
           this.bootstrapApp();
         } else {
           alert(data.error || 'Giriş başarısız.');
+          if (typeof (window as any).turnstile !== 'undefined') {
+            (window as any).turnstile.reset();
+          }
         }
       } catch (err) {
         console.error('Login error:', err);
         alert('Sunucuya bağlanılamadı.');
+        if (typeof (window as any).turnstile !== 'undefined') {
+          (window as any).turnstile.reset();
+        }
       }
     });
 
@@ -169,6 +179,9 @@ class AppController {
       this.editRepForm.reset();
       document.getElementById('map-container')?.classList.remove('admin-mode');
       this.mapLegendContainer.style.display = 'none';
+      if (typeof (window as any).turnstile !== 'undefined') {
+        (window as any).turnstile.reset();
+      }
     });
 
     // Toggle Change Password
@@ -1079,6 +1092,38 @@ class AppController {
       cancelBtn.addEventListener('click', onCancel);
       confirmBtn.addEventListener('click', onConfirm);
     });
+  }
+
+  private async initTurnstile(): Promise<void> {
+    try {
+      const res = await apiFetch('/api/auth/config');
+      if (res.ok) {
+        const config = await res.json() as { turnstileSiteKey: string };
+        const siteKey = config.turnstileSiteKey;
+
+        const renderWidget = () => {
+          if (typeof (window as any).turnstile !== 'undefined') {
+            (window as any).turnstile.render('#turnstile-container', {
+              sitekey: siteKey,
+              theme: 'dark'
+            });
+          }
+        };
+
+        if (typeof (window as any).turnstile !== 'undefined') {
+          renderWidget();
+        } else {
+          const interval = setInterval(() => {
+            if (typeof (window as any).turnstile !== 'undefined') {
+              clearInterval(interval);
+              renderWidget();
+            }
+          }, 100);
+        }
+      }
+    } catch (err) {
+      console.error('Turnstile initialization failed:', err);
+    }
   }
 }
 

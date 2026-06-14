@@ -1,7 +1,9 @@
 import { verifyAdminPassword, verifyPassword, hashPassword } from './auth';
 import { createSession, getSession, destroySession, SessionData } from './session';
 import { isRateLimited } from './rateLimit';
-import { isValidCountryCode, isValidColorHex, sanitizeInput } from './validation';
+import { isValidCountryCode, isValidColorHex, sanitizeInput, isValidRepresentativeCode, isValidPassword } from './validation';
+
+const DUMMY_HASH = '73616c7473616c7473616c7473616c74:6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f66';
 
 export interface Env {
   DB: D1Database;
@@ -9,6 +11,8 @@ export interface Env {
   ADMIN_USERNAME?: string;
   ADMIN_PASSWORD_HASH?: string;
   ALLOWED_ORIGIN?: string;
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET_KEY?: string;
 }
 
 function getAllowedOrigins(env: Env): string[] {
@@ -85,9 +89,16 @@ export default {
     // IP-based Rate Limiter (for state-changing endpoints)
     const ip = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
     if (request.method === 'POST') {
-      const limited = await isRateLimited(env.SESSIONS, ip, 40, 60);
-      if (limited) {
-        return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429, headers);
+      if (url.pathname === '/api/auth/login') {
+        const loginLimited = await isRateLimited(env.SESSIONS, `login:${ip}`, 10, 60);
+        if (loginLimited) {
+          return jsonResponse({ error: 'Çok fazla giriş denemesi. Lütfen 60 saniye sonra tekrar deneyin.' }, 429, headers);
+        }
+      } else {
+        const limited = await isRateLimited(env.SESSIONS, ip, 40, 60);
+        if (limited) {
+          return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429, headers);
+        }
       }
 
       // CSRF Protection: Verify Origin/Referer for POST requests against allowed origins list
@@ -107,6 +118,13 @@ export default {
         } catch {}
       }
 
+      // Defense-in-depth: if session cookie exists, reject when both Origin and Referer are missing
+      const cookies = parseCookies(request.headers.get('Cookie'));
+      const hasSessionCookie = !!cookies['session'];
+      if (!clientOrigin && hasSessionCookie) {
+        return jsonResponse({ error: 'CSRF validation failed: Missing origin/referer headers.' }, 403, headers);
+      }
+
       if (clientOrigin) {
         const allowedOrigins = getAllowedOrigins(env);
         const isValid = allowedOrigins.includes(clientOrigin);
@@ -117,46 +135,89 @@ export default {
     }
 
     try {
+      // 0. GET /api/auth/config
+      if (url.pathname === '/api/auth/config' && request.method === 'GET') {
+        const siteKey = env.TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+        return jsonResponse({ turnstileSiteKey: siteKey }, 200, headers);
+      }
+
       // 1. POST /api/auth/login
       if (url.pathname === '/api/auth/login' && request.method === 'POST') {
         const body: any = await request.json();
         const usernameOrCode = body.usernameOrCode;
         const password = body.password;
+        const turnstileToken = body.turnstileToken;
 
         if (!usernameOrCode || !password) {
           return jsonResponse({ error: 'Credentials required.' }, 400, headers);
         }
 
-        // Check Admin Role
+        // Verify Turnstile Token
+        if (!turnstileToken) {
+          return jsonResponse({ error: 'Turnstile doğrulaması gerekiyor.' }, 400, headers);
+        }
+
+        const verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+        const secretKey = env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA';
+
+        try {
+          const verifyRes = await fetch(verifyUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `secret=${encodeURIComponent(secretKey)}&response=${encodeURIComponent(turnstileToken)}&remoteip=${encodeURIComponent(ip)}`
+          });
+
+          const verifyData: any = await verifyRes.json();
+          if (!verifyData.success) {
+            return jsonResponse({ error: 'Turnstile doğrulama başarısız oldu. Lütfen tekrar deneyin.' }, 400, headers);
+          }
+        } catch (err: any) {
+          return jsonResponse({ error: 'Turnstile doğrulama servisinde hata oluştu: ' + err.message }, 500, headers);
+        }
+
+        // Timing-Safe Credentials Verification
+        let isValid = false;
+        let role: 'admin' | 'representative' | null = null;
+        let repName = '';
+        let repId: number | undefined = undefined;
+
         const expectedAdminUser = env.ADMIN_USERNAME || 'admin';
         const expectedAdminHash = env.ADMIN_PASSWORD_HASH;
 
-        if (usernameOrCode === expectedAdminUser && expectedAdminHash) {
-          const isValid = await verifyAdminPassword(password, expectedAdminHash);
-          if (isValid) {
-            const token = await createSession(env.SESSIONS, 'admin');
-            headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
-            return jsonResponse({ success: true, role: 'admin' }, 200, headers);
-          }
-        }
+        const isAdmin = usernameOrCode === expectedAdminUser;
 
-        // Check Representative Role
+        // Query database to keep database lookup timing consistent
         const rep = await env.DB.prepare(
           'SELECT id, password_hash, name FROM representatives WHERE representative_code = ?'
         )
           .bind(usernameOrCode)
           .first<{ id: number; password_hash: string; name: string }>();
 
-        if (rep) {
-          const isValid = await verifyPassword(password, rep.password_hash);
-          if (isValid) {
-            const token = await createSession(env.SESSIONS, 'representative', rep.id);
-            headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
-            return jsonResponse({ success: true, role: 'representative', name: rep.name }, 200, headers);
-          }
+        if (isAdmin && expectedAdminHash) {
+          isValid = await verifyAdminPassword(password, expectedAdminHash);
+          role = 'admin';
+        } else if (rep) {
+          isValid = await verifyPassword(password, rep.password_hash);
+          role = 'representative';
+          repName = rep.name;
+          repId = rep.id;
+        } else {
+          // Dummy verification to prevent username enumeration timing attack
+          await verifyPassword(password, DUMMY_HASH);
+          isValid = false;
         }
 
-        return jsonResponse({ error: 'Invalid username/code or password.' }, 401, headers);
+        if (isValid && role === 'admin') {
+          const token = await createSession(env.SESSIONS, 'admin');
+          headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
+          return jsonResponse({ success: true, role: 'admin' }, 200, headers);
+        } else if (isValid && role === 'representative' && repId !== undefined) {
+          const token = await createSession(env.SESSIONS, 'representative', repId);
+          headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
+          return jsonResponse({ success: true, role: 'representative', name: repName }, 200, headers);
+        }
+
+        return jsonResponse({ error: 'Geçersiz kullanıcı adı/kodu veya şifre.' }, 401, headers);
       }
 
       // 2. POST /api/auth/logout
@@ -252,6 +313,10 @@ export default {
           return jsonResponse({ error: 'Old and new passwords are required.' }, 400, headers);
         }
 
+        if (!isValidPassword(newPassword)) {
+          return jsonResponse({ error: 'Yeni şifre en az 8 karakter olmalıdır.' }, 400, headers);
+        }
+
         // Fetch representative details to verify old password
         const rep = await env.DB.prepare(
           'SELECT password_hash FROM representatives WHERE id = ?'
@@ -339,6 +404,14 @@ export default {
             return jsonResponse({ error: 'Missing representative parameters.' }, 400, headers);
           }
 
+          if (!isValidRepresentativeCode(code)) {
+            return jsonResponse({ error: 'Temsilci kodu 3-30 karakter olmalı ve yalnızca harf, rakam, alt çizgi, nokta ve tire içermelidir.' }, 400, headers);
+          }
+
+          if (!isValidPassword(password)) {
+            return jsonResponse({ error: 'Şifre en az 8 karakter olmalıdır.' }, 400, headers);
+          }
+
           if (!isValidColorHex(color)) {
             return jsonResponse({ error: 'Invalid hex color format.' }, 400, headers);
           }
@@ -370,6 +443,16 @@ export default {
 
           if (!id || !code || !name || !color) {
             return jsonResponse({ error: 'Missing representative parameters.' }, 400, headers);
+          }
+
+          if (!isValidRepresentativeCode(code)) {
+            return jsonResponse({ error: 'Temsilci kodu 3-30 karakter olmalı ve yalnızca harf, rakam, alt çizgi, nokta ve tire içermelidir.' }, 400, headers);
+          }
+
+          if (password && password.trim() !== '') {
+            if (!isValidPassword(password)) {
+              return jsonResponse({ error: 'Şifre en az 8 karakter olmalıdır.' }, 400, headers);
+            }
           }
 
           if (!isValidColorHex(color)) {

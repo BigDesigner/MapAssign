@@ -7,6 +7,14 @@ export function isValidColorHex(hex: string): boolean {
   return /^#[0-9A-Fa-f]{6}$/.test(hex);
 }
 
+export function isValidRepresentativeCode(code: string): boolean {
+  return /^[a-zA-Z0-9_.-]{3,30}$/.test(code);
+}
+
+export function isValidPassword(password: string): boolean {
+  return password.length >= 8;
+}
+
 export function sanitizeInput(str: string): string {
   return str.replace(/[&<>"']/g, (match) => {
     switch (match) {
