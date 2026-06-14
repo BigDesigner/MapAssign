@@ -1,3 +1,9 @@
+# ==============================================================================
+# ⚠️ AI AGENT CONSTITUTION WARNING
+# ANY MODIFICATION TO THIS FILE MUST PRESERVE ALL ENVIRONMENT VARIABLES UNDER [vars]
+# DO NOT DELETE BINDINGS OR ENVIRONMENT VARIABLES WITHOUT EXPLICIT USER CONFIRMATION.
+# ==============================================================================
+
 name = "mapassign-api"
 main = "backend/index.ts"
 compatibility_date = "2024-01-01"
@@ -15,6 +21,9 @@ database_name = "mapassign"
 # You must create this database using: wrangler d1 create map-assign-db
 database_id = "535e995a-3ac8-4cbd-b2f1-0be4fca3c224"
 
+# ==============================================================================
+# DO NOT REMOVE OR OVERWRITE EXISTING ENVIRONMENT VARIABLES
+# ==============================================================================
 [vars]
 ADMIN_USERNAME = "admin"
 ALLOWED_ORIGIN = "https://map.akansu.com"
