@@ -79,6 +79,12 @@ class AppController {
   private tableViewBtn = document.getElementById('table-view-btn') as HTMLButtonElement;
   private mapLegendContainer = document.getElementById('map-legend-container') as HTMLElement;
   private mapLegendContent = document.getElementById('map-legend-content') as HTMLElement;
+
+  private mapSearchInput = document.getElementById('map-search-input') as HTMLInputElement;
+  private mapSearchClear = document.getElementById('map-search-clear') as HTMLButtonElement;
+  private mapSearchSuggestions = document.getElementById('map-search-suggestions') as HTMLElement;
+  private mapSearchSuggestionsList = document.getElementById('map-search-suggestions-list') as HTMLUListElement;
+
   private repName = '';
   private repColor = '';
 
@@ -468,6 +474,74 @@ class AppController {
         alert('Sunucu bağlantı hatası.');
       }
     });
+
+    // Map Autocomplete Search
+    this.mapSearchInput.addEventListener('input', () => {
+      const q = this.mapSearchInput.value.trim().toLowerCase();
+      if (!q) {
+        this.mapSearchSuggestions.style.display = 'none';
+        this.mapSearchClear.style.display = 'none';
+        return;
+      }
+
+      this.mapSearchClear.style.display = 'flex';
+
+      // Find matching countries in COUNTRY_NAMES
+      const matches = Object.entries(COUNTRY_NAMES)
+        .filter(([code, name]) => name.toLowerCase().includes(q) || code.includes(q))
+        .slice(0, 8); // top 8 matches
+
+      if (matches.length > 0) {
+        this.mapSearchSuggestionsList.innerHTML = matches.map(([code, name]) => {
+          // Look up assignment for this country in mapEngine assignmentsMap
+          const assignment = this.mapEngine ? this.mapEngine.assignmentsMap.get(code.toUpperCase()) : null;
+          let badgeHtml = '<span class="suggestion-badge">Atanmamış</span>';
+          if (assignment) {
+            badgeHtml = `<span class="suggestion-badge">
+              <span class="suggestion-badge-dot" style="background-color: ${assignment.color_hex};"></span>
+              ${assignment.name}
+            </span>`;
+          }
+          return `<li data-code="${code}">
+            <span style="font-weight: 600;">${name}</span>
+            ${badgeHtml}
+          </li>`;
+        }).join('');
+
+        this.mapSearchSuggestions.style.display = 'block';
+
+        // Add click listener to suggestions
+        this.mapSearchSuggestionsList.querySelectorAll('li').forEach(li => {
+          li.addEventListener('click', () => {
+            const code = li.getAttribute('data-code');
+            const name = li.querySelector('span')?.textContent || '';
+            if (code) {
+              this.mapSearchInput.value = name;
+              this.mapSearchSuggestions.style.display = 'none';
+              this.mapEngine?.focusCountry(code);
+            }
+          });
+        });
+      } else {
+        this.mapSearchSuggestionsList.innerHTML = '<li style="color: var(--text-muted); cursor: default;">Eşleşen ülke bulunamadı</li>';
+        this.mapSearchSuggestions.style.display = 'block';
+      }
+    });
+
+    // Handle clear button click
+    this.mapSearchClear.addEventListener('click', () => {
+      this.mapSearchInput.value = '';
+      this.mapSearchSuggestions.style.display = 'none';
+      this.mapSearchClear.style.display = 'none';
+    });
+
+    // Close suggestions dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('#map-search-panel')) {
+        this.mapSearchSuggestions.style.display = 'none';
+      }
+    });
   }
 
   private async bootstrapApp(): Promise<void> {
@@ -692,41 +766,8 @@ class AppController {
 
           // Click interaction to pulse path/group
           li.addEventListener('click', () => {
-            const el = (document.getElementById(c.code) || document.getElementById(c.code.toUpperCase())) as SVGElement | null;
-            if (el && this.mapEngine) {
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-              // Pulse effect
-              let count = 0;
-              const pathsToPulse = el.tagName.toLowerCase() === 'path'
-                ? [el as SVGPathElement]
-                : Array.from(el.querySelectorAll('path')).filter(p => {
-                    let parent = p.parentElement;
-                    while (parent && (parent as any) !== el) {
-                      if (parent.tagName.toLowerCase() === 'g') {
-                        const id = parent.id || parent.getAttribute('id') || '';
-                        if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
-                          return false;
-                        }
-                      }
-                      parent = parent.parentElement;
-                    }
-                    return true;
-                  });
-              const originalFills = pathsToPulse.map(p => p.style.fill || '');
-
-              const interval = setInterval(() => {
-                pathsToPulse.forEach((p, idx) => {
-                  p.style.fill = count % 2 === 0 ? '#ffffff' : originalFills[idx];
-                });
-                count++;
-                if (count > 5) {
-                  clearInterval(interval);
-                  pathsToPulse.forEach((p, idx) => {
-                    p.style.fill = originalFills[idx];
-                  });
-                }
-              }, 200);
+            if (this.mapEngine) {
+              this.mapEngine.focusCountry(c.code);
             }
           });
 

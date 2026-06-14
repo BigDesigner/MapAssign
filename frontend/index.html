@@ -156,6 +156,35 @@
       background: #dc2626;
     }
 
+    #map-search-suggestions-list li {
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-color);
+    }
+    #map-search-suggestions-list li:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .suggestion-badge {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .suggestion-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
     /* Interactive Overlay Panel (Floating) */
     .overlay-panel {
       position: absolute;
@@ -648,6 +677,21 @@
         <select id="rep-select">
           <option value="0">Temsilci Atanmamış</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Map Search Control (Top Right) -->
+    <div id="map-search-panel" class="overlay-panel" style="top: 16px; right: 16px; width: 300px; padding: 12px; z-index: 150;">
+      <div class="search-wrap" style="position: relative;">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
+        </svg>
+        <input type="text" id="map-search-input" placeholder="Haritada ülke ara (örn. Türkiye)..." style="padding-left: 38px; width: 100%;">
+        <button id="map-search-clear" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; padding: 0; background: transparent; color: var(--text-muted); border: none; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center;">&times;</button>
+      </div>
+      <div id="map-search-suggestions" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 8px; border-top: 1px solid var(--panel-border); padding-top: 8px;">
+        <ul id="map-search-suggestions-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
+        </ul>
       </div>
     </div>
 

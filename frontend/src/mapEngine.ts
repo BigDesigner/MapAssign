@@ -29,7 +29,7 @@ export class MapEngine {
 
   // Tooltip & Cache
   private tooltip!: HTMLElement;
-  private assignmentsMap: Map<string, CountryAssignment> = new Map();
+  public assignmentsMap: Map<string, CountryAssignment> = new Map();
 
   constructor(
     svg: SVGSVGElement,
@@ -430,5 +430,76 @@ export class MapEngine {
         });
       }
     }
+  }
+
+  public focusCountry(countryCode: string): void {
+    const element = (this.svg.getElementById(countryCode)
+                 || this.svg.getElementById(countryCode.toUpperCase())
+                 || this.svg.getElementById(countryCode.toLowerCase())) as SVGElement | null;
+    if (!element) return;
+
+    try {
+      const bbox = (element as any).getBBox();
+      if (bbox && bbox.width > 0 && bbox.height > 0) {
+        const rect = this.container.getBoundingClientRect();
+        const containerAspect = rect.height / rect.width;
+
+        // Determine comfortable zoom level based on bounding box
+        let targetW = Math.max(bbox.width * 2.5, 120);
+        targetW = Math.min(targetW, 400); 
+        let targetH = targetW * containerAspect;
+
+        // Find bounding box center
+        const centerX = bbox.x + bbox.width / 2;
+        const centerY = bbox.y + bbox.height / 2;
+
+        this.vbX = centerX - targetW / 2;
+        this.vbY = centerY - targetH / 2;
+        this.vbW = targetW;
+        this.vbH = targetH;
+
+        this.updateViewBox();
+
+        // Pulse highlight animation
+        this.pulseCountry(element);
+      }
+    } catch (e) {
+      console.error('Error focusing on country:', e);
+      // Fallback
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  public pulseCountry(element: SVGElement): void {
+    let count = 0;
+    const pathsToPulse = element.tagName.toLowerCase() === 'path'
+      ? [element as SVGPathElement]
+      : Array.from(element.querySelectorAll('path')).filter(p => {
+          let parent = p.parentElement;
+          while (parent && (parent as any) !== element) {
+            if (parent.tagName.toLowerCase() === 'g') {
+              const id = parent.id || parent.getAttribute('id') || '';
+              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                return false;
+              }
+            }
+            parent = parent.parentElement;
+          }
+          return true;
+        });
+    const originalFills = pathsToPulse.map(p => p.style.fill || '');
+
+    const interval = setInterval(() => {
+      pathsToPulse.forEach((p, idx) => {
+        p.style.fill = count % 2 === 0 ? '#ffffff' : originalFills[idx];
+      });
+      count++;
+      if (count > 5) {
+        clearInterval(interval);
+        pathsToPulse.forEach((p, idx) => {
+          p.style.fill = originalFills[idx];
+        });
+      }
+    }, 200);
   }
 }
