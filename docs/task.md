@@ -28,6 +28,8 @@
 - [x] Temsilci silme işleminde tarayıcının standart onay kutusu (`confirm`) yerine koyu/glassmorphic temayla uyumlu şık ve özel onay modalı (`#confirm-modal`)
 - [x] Tablo sayfasında (`table.html`) ataması olan temsilcilere göre dinamik satır filtreleme dropdown'ı (`#rep-filter`)
 - [x] Harita üzerinde ülke arama/zoom özelliği (Özel blurlu autocomplete panel ve SVG viewBox koordinat tabanlı yakınlaşma odaklama mantığı)
+- [x] Arama filtrelerinde Türkçe büyük/küçük harf duyarlılığı eşleşme sorunlarının giderilmesi (`normalizeForSearch` normalizasyon fonksiyonunun eklenmesi)
+- [x] Somaliland mükerrer kaydının (`_somaliland`) `countryNames.ts` dosyasından kaldırılması ve harita motoru ile ön yüzden temizlenmesi
 
 ## 🔄 Devam Eden / Bekleyen
 - [ ] Cloudflare Pages Web Analytics beacon CORS uyarısı (Cloudflare tarafı, bizim kontrolümüzde değil)
