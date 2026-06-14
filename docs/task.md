@@ -27,12 +27,12 @@
 - [x] Admin panelinde temsilci silme butonunun belirginleştirilmesi (arka plan renginin koyu kırmızı yapılması ve simge olarak temiz bir beyaz unicode `✕` kullanılması)
 - [x] Temsilci silme işleminde tarayıcının standart onay kutusu (`confirm`) yerine koyu/glassmorphic temayla uyumlu şık ve özel onay modalı (`#confirm-modal`)
 - [x] Tablo sayfasında (`table.html`) ataması olan temsilcilere göre dinamik satır filtreleme dropdown'ı (`#rep-filter`)
+- [x] Harita üzerinde ülke arama/zoom özelliği (Özel blurlu autocomplete panel ve SVG viewBox koordinat tabanlı yakınlaşma odaklama mantığı)
 
 ## 🔄 Devam Eden / Bekleyen
 - [ ] Cloudflare Pages Web Analytics beacon CORS uyarısı (Cloudflare tarafı, bizim kontrolümüzde değil)
 
 ## 📋 Gelecek Görevler (Backlog)
-- [ ] Harita üzerinde ülke arama/zoom özelliği
 - [ ] Mobil görünüm iyileştirmeleri (responsive panel davranışı)
 - [ ] Dark/Light mode toggle
 - [ ] Atama geçmişi (audit log)
