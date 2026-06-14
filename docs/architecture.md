@@ -81,7 +81,7 @@ Kullanıcı → POST /api/auth/login
 ```
 index.html
 └── AppController (main.ts)
-    ├── MapEngine (mapEngine.ts)      # SVG pan/zoom, renk
+    ├── MapEngine (mapEngine.ts)      # SVG pan/zoom, renk, odaklama & yanıp sönme (focus & pulse)
     ├── exportMapToPNG (pdfExport.ts) # Canvas-based PNG export
     └── COUNTRY_NAMES (countryNames.ts)
 
