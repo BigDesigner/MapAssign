@@ -25,13 +25,13 @@
 - [x] SVG haritada Somaliland (`xs-`), Kosova (`xk-`) ve Kuzey Kıbrıs (`xc-`) path'lerinin görünür kılınması ve renklendirilebilir hale getirilmesi
 - [x] Kıbrıs (`CY`), Somaliland ve Kosova için iç içe (nested) ülke renklendirme ve üzerine gelme (hover) çakışmalarının çözülmesi (Kuzey Kıbrıs renklendirildiğinde Güney Kıbrıs'ın veya tam tersinin etkilenmemesi)
 - [x] Admin panelinde temsilci silme butonunun belirginleştirilmesi (arka plan renginin koyu kırmızı yapılması ve simge olarak temiz bir beyaz unicode `✕` kullanılması)
+- [x] Temsilci silme işleminde tarayıcının standart onay kutusu (`confirm`) yerine koyu/glassmorphic temayla uyumlu şık ve özel onay modalı (`#confirm-modal`)
+- [x] Tablo sayfasında (`table.html`) ataması olan temsilcilere göre dinamik satır filtreleme dropdown'ı (`#rep-filter`)
 
 ## 🔄 Devam Eden / Bekleyen
 - [ ] Cloudflare Pages Web Analytics beacon CORS uyarısı (Cloudflare tarafı, bizim kontrolümüzde değil)
 
 ## 📋 Gelecek Görevler (Backlog)
-- [ ] Temsilci silme işleminde onay modal'ı yerine daha şık UI
-- [ ] Tablo sayfasında temsilciye göre grup filtreleme
 - [ ] Harita üzerinde ülke arama/zoom özelliği
 - [ ] Mobil görünüm iyileştirmeleri (responsive panel davranışı)
 - [ ] Dark/Light mode toggle
