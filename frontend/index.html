@@ -94,6 +94,68 @@
     }
 
 
+    /* Confirm Modal CSS */
+    .confirm-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 6, 11, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .confirm-modal-overlay.active {
+      opacity: 1;
+    }
+    .confirm-modal-box {
+      background: rgba(17, 24, 39, 0.95);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 24px;
+      width: 320px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.7);
+      transform: scale(0.9);
+      transition: transform 0.2s ease;
+      text-align: center;
+    }
+    .confirm-modal-overlay.active .confirm-modal-box {
+      transform: scale(1);
+    }
+    .confirm-modal-box h4 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      color: var(--text-color);
+    }
+    .confirm-modal-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .confirm-modal-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .confirm-modal-buttons button {
+      flex: 1;
+    }
+    button.danger {
+      background: var(--danger-color);
+      border: none;
+      color: #ffffff;
+    }
+    button.danger:hover {
+      background: #dc2626;
+    }
+
     /* Interactive Overlay Panel (Floating) */
     .overlay-panel {
       position: absolute;
@@ -602,6 +664,18 @@
       <button id="pdf-export-btn" class="action-btn" title="PNG Olarak İndir">
         <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
       </button>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="confirm-modal" class="confirm-modal-overlay">
+    <div class="confirm-modal-box">
+      <h4 id="confirm-modal-title">Temsilciyi Sil</h4>
+      <p id="confirm-modal-message">Bu temsilciyi silmek istediğinize emin misiniz?</p>
+      <div class="confirm-modal-buttons">
+        <button id="confirm-modal-cancel" class="secondary">Vazgeç</button>
+        <button id="confirm-modal-confirm" class="danger">Sil</button>
+      </div>
     </div>
   </div>
   

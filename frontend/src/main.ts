@@ -401,7 +401,11 @@ class AppController {
       const rep = this.representatives.find(r => r.id === repId);
       if (!rep) return;
 
-      if (!confirm(`${rep.name} isimli temsilciyi silmek istediğinize emin misiniz?`)) return;
+      const confirmed = await this.showConfirm(
+        'Temsilciyi Sil',
+        `${rep.name} isimli temsilciyi silmek istediğinize emin misiniz?`
+      );
+      if (!confirmed) return;
 
       try {
         const res = await apiFetch('/api/admin/representatives', {
@@ -982,6 +986,38 @@ class AppController {
     } else {
       this.mapLegendContainer.style.display = 'none';
     }
+  }
+
+  private showConfirm(title: string, message: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirm-modal') as HTMLElement;
+      const titleEl = document.getElementById('confirm-modal-title') as HTMLElement;
+      const msgEl = document.getElementById('confirm-modal-message') as HTMLElement;
+      const cancelBtn = document.getElementById('confirm-modal-cancel') as HTMLButtonElement;
+      const confirmBtn = document.getElementById('confirm-modal-confirm') as HTMLButtonElement;
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      modal.style.display = 'flex';
+      modal.offsetHeight; // reflow
+      modal.classList.add('active');
+
+      const cleanup = (value: boolean) => {
+        modal.classList.remove('active');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 200);
+        cancelBtn.removeEventListener('click', onCancel);
+        confirmBtn.removeEventListener('click', onConfirm);
+        resolve(value);
+      };
+
+      const onCancel = () => cleanup(false);
+      const onConfirm = () => cleanup(true);
+
+      cancelBtn.addEventListener('click', onCancel);
+      confirmBtn.addEventListener('click', onConfirm);
+    });
   }
 }
 

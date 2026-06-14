@@ -141,6 +141,20 @@
     #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
     #search-input::placeholder { color: var(--text-muted); }
 
+    #rep-filter {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--surface-solid);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    #rep-filter:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+
     .toolbar-right {
       display: flex;
       align-items: center;
@@ -314,14 +328,19 @@
   </header>
 
   <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
+  <div class="toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <div class="search-wrap" style="flex: 2; min-width: 200px;">
       <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
       </svg>
       <input type="text" id="search-input" placeholder="Temsilci veya ülke ara...">
     </div>
-    <div class="toolbar-right">
+    <div class="filter-wrap" style="flex: 1; min-width: 160px;">
+      <select id="rep-filter">
+        <option value="">Tüm Temsilciler</option>
+      </select>
+    </div>
+    <div class="toolbar-right" style="flex-shrink: 0; margin-left: auto;">
       <span id="row-count">—</span>
     </div>
   </div>
@@ -391,6 +410,7 @@
     const tableWrap     = document.getElementById('table-wrap');
     const csvBtn        = document.getElementById('csv-btn');
     const roleBadge     = document.getElementById('role-badge');
+    const repFilter     = document.getElementById('rep-filter');
 
     function showState(which) {
       loadingState.classList.toggle('visible', which === 'loading');
@@ -455,19 +475,34 @@
         showState('auth');
         return;
       }
+      populateRepFilter();
       applyFilter();
     }
 
     // ── Filter ──
+    function populateRepFilter() {
+      const reps = [...new Set(allRows.map(r => r.rep))].sort((a, b) => a.localeCompare(b, 'tr'));
+      const currentVal = repFilter.value;
+      repFilter.innerHTML = '<option value="">Tüm Temsilciler</option>' +
+        reps.map(r => `<option value="${escHtml(r)}">${escHtml(r)}</option>`).join('');
+      if (reps.includes(currentVal)) {
+        repFilter.value = currentVal;
+      }
+    }
+
     function applyFilter() {
       const q = searchInput.value.trim().toLowerCase();
-      filtered = q
-        ? allRows.filter(r =>
-            r.rep.toLowerCase().includes(q) ||
-            r.name.toLowerCase().includes(q) ||
-            r.code.includes(q)
-          )
-        : [...allRows];
+      const repVal = repFilter.value;
+      
+      filtered = allRows.filter(r => {
+        const matchesSearch = !q || (
+          r.rep.toLowerCase().includes(q) ||
+          r.name.toLowerCase().includes(q) ||
+          r.code.includes(q)
+        );
+        const matchesRep = !repVal || r.rep === repVal;
+        return matchesSearch && matchesRep;
+      });
       applySort();
     }
 
@@ -538,8 +573,9 @@
       URL.revokeObjectURL(url);
     });
 
-    // ── Search ──
+    // ── Search & Filter ──
     searchInput.addEventListener('input', applyFilter);
+    repFilter.addEventListener('change', applyFilter);
 
     // ── Sort header clicks ──
     document.querySelectorAll('thead th[data-col]').forEach(th => {
