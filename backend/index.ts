@@ -500,6 +500,11 @@ export default {
             return jsonResponse({ error: 'Representative ID required.' }, 400, headers);
           }
 
+          // Delete assignments first to prevent orphan/dangling rows (defense-in-depth)
+          await env.DB.prepare('DELETE FROM country_assignments WHERE representative_id = ?')
+            .bind(id)
+            .run();
+
           await env.DB.prepare('DELETE FROM representatives WHERE id = ?')
             .bind(id)
             .run();
