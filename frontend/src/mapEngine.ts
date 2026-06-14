@@ -66,7 +66,7 @@ export class MapEngine {
     while (currentElement) {
       if (currentElement.tagName.toLowerCase() === 'g') {
         const id = currentElement.id || currentElement.getAttribute('id') || '';
-        if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+        if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
           return { code: id.toUpperCase(), element: currentElement };
         }
       }
@@ -75,7 +75,7 @@ export class MapEngine {
 
     // Fallback: check the element itself
     const id = targetElement.id || targetElement.getAttribute('id') || '';
-    if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+    if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
       return { code: id.toUpperCase(), element: targetElement };
     }
 
@@ -373,7 +373,7 @@ export class MapEngine {
             while (parent && parent !== element) {
               if (parent.tagName.toLowerCase() === 'g') {
                 const id = parent.id || parent.getAttribute('id') || '';
-                if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
                   return; // Skip this path as it belongs to a nested country group
                 }
               }
@@ -420,7 +420,7 @@ export class MapEngine {
           while (parent && parent !== element) {
             if (parent.tagName.toLowerCase() === 'g') {
               const id = parent.id || parent.getAttribute('id') || '';
-              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
                 return; // Skip this path as it belongs to a nested country group
               }
             }
@@ -479,7 +479,7 @@ export class MapEngine {
           while (parent && (parent as any) !== element) {
             if (parent.tagName.toLowerCase() === 'g') {
               const id = parent.id || parent.getAttribute('id') || '';
-              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+              if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
                 return false;
               }
             }

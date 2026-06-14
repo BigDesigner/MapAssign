@@ -738,7 +738,7 @@ class AppController {
                   while (parent && (parent as any) !== el) {
                     if (parent.tagName.toLowerCase() === 'g') {
                       const id = parent.id || parent.getAttribute('id') || '';
-                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
                         return false;
                       }
                     }
@@ -768,7 +768,7 @@ class AppController {
                   while (parent && (parent as any) !== el) {
                     if (parent.tagName.toLowerCase() === 'g') {
                       const id = parent.id || parent.getAttribute('id') || '';
-                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-') || id === '_somaliland')) {
+                      if (id && (id.length === 2 || id.toUpperCase().startsWith('GB-'))) {
                         return false;
                       }
                     }

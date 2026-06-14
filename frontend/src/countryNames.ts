@@ -52,7 +52,6 @@ export const COUNTRY_NAMES: Record<string, string> = {
   xs: "Somaliland",
   xk: "Kosova",
   xc: "Kuzey Kıbrıs",
-  _somaliland: "Somaliland",
   "gb-eng": "İngiltere",
   "gb-sct": "İskoçya",
   "gb-wls": "Galler",
