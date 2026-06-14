@@ -16,4 +16,6 @@ database_name = "mapassign"
 database_id = "535e995a-3ac8-4cbd-b2f1-0be4fca3c224"
 
 [vars]
+ADMIN_USERNAME = "admin"
+ALLOWED_ORIGIN = "https://map.akansu.com"
 TURNSTILE_SITE_KEY = "0x4AAAAAADkZu0g18QHwPnno"
