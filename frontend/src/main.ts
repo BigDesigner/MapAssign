@@ -111,6 +111,7 @@ class AppController {
   constructor() {
     this.initEvents();
     this.initTurnstile();
+    this.initCustomColorPickers();
   }
 
   private initEvents(): void {
@@ -830,6 +831,7 @@ class AppController {
     this.editRepCode.value = rep.representative_code;
     this.editRepName.value = rep.name;
     this.editRepColor.value = rep.color_hex;
+    this.syncCustomColorPicker('picker-edit-rep', rep.color_hex);
     this.editRepPass.value = '';
 
     this.repAssignedList.innerHTML = '<p style="color: var(--text-muted); font-size: 12px; margin: 4px 0;">Loading assignments...</p>';
@@ -1123,6 +1125,97 @@ class AppController {
       }
     } catch (err) {
       console.error('Turnstile initialization failed:', err);
+    }
+  }
+
+  private initCustomColorPickers(): void {
+    const setupPicker = (pickerId: string, hiddenInputId: string) => {
+      const picker = document.getElementById(pickerId);
+      if (!picker) return;
+
+      const hiddenInput = document.getElementById(hiddenInputId) as HTMLInputElement;
+      const dots = picker.querySelectorAll('.preset-dot');
+      const hexInput = picker.querySelector('.custom-hex-text') as HTMLInputElement;
+      const preview = picker.querySelector('.custom-color-preview') as HTMLElement;
+
+      // Click on preset dots
+      dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          dots.forEach(d => d.classList.remove('selected'));
+          dot.classList.add('selected');
+
+          const color = dot.getAttribute('data-color') || '#3b82f6';
+          hiddenInput.value = color;
+          hexInput.value = '';
+          preview.style.backgroundColor = color;
+        });
+      });
+
+      // Type in custom hex text input
+      hexInput.addEventListener('input', () => {
+        // Allow only valid hex characters
+        let val = hexInput.value.replace(/[^0-9A-Fa-f]/g, '').toLowerCase();
+        hexInput.value = val;
+
+        if (val.length === 6) {
+          const color = '#' + val;
+          hiddenInput.value = color;
+          preview.style.backgroundColor = color;
+
+          // Remove selected from preset dots
+          dots.forEach(d => d.classList.remove('selected'));
+        }
+      });
+
+      // Listen to form reset events to automatically sync our custom picker back to default
+      const form = picker.closest('form');
+      if (form) {
+        form.addEventListener('reset', () => {
+          setTimeout(() => {
+            const defaultColor = '#3b82f6';
+            hiddenInput.value = defaultColor;
+            dots.forEach(d => d.classList.remove('selected'));
+            const defaultDot = picker.querySelector(`[data-color="${defaultColor}"]`);
+            if (defaultDot) defaultDot.classList.add('selected');
+            hexInput.value = '';
+            preview.style.backgroundColor = defaultColor;
+          }, 0);
+        });
+      }
+    };
+
+    setupPicker('picker-create-rep', 'rep-color');
+    setupPicker('picker-edit-rep', 'edit-rep-color');
+  }
+
+  private syncCustomColorPicker(pickerId: string, colorHex: string): void {
+    const picker = document.getElementById(pickerId);
+    if (!picker) return;
+
+    const dots = picker.querySelectorAll('.preset-dot');
+    const hexInput = picker.querySelector('.custom-hex-text') as HTMLInputElement;
+    const preview = picker.querySelector('.custom-color-preview') as HTMLElement;
+
+    // Set preview color
+    preview.style.backgroundColor = colorHex;
+
+    // Check if colorHex matches one of the preset dots
+    let matched = false;
+    dots.forEach(dot => {
+      const dotColor = dot.getAttribute('data-color');
+      if (dotColor && dotColor.toLowerCase() === colorHex.toLowerCase()) {
+        dot.classList.add('selected');
+        matched = true;
+      } else {
+        dot.classList.remove('selected');
+      }
+    });
+
+    if (matched) {
+      hexInput.value = '';
+    } else {
+      // Remove '#' and fill hex input
+      hexInput.value = colorHex.startsWith('#') ? colorHex.substring(1) : colorHex;
     }
   }
 }

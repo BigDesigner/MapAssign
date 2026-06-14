@@ -482,6 +482,82 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    .custom-color-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .preset-colors {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+    .preset-dot {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      cursor: pointer;
+      position: relative;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .preset-dot:hover {
+      transform: scale(1.1);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .preset-dot.selected {
+      border-color: #ffffff;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+    .preset-dot.selected::after {
+      content: '';
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .custom-color-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 4px 12px;
+      height: 40px;
+    }
+    .hash-prefix {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 14px;
+      user-select: none;
+    }
+    .custom-hex-text {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      height: 100% !important;
+      color: var(--text-color) !important;
+      font-size: 13px !important;
+      width: 100% !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    .custom-color-preview {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: #3b82f6;
+      flex-shrink: 0;
+      transition: background-color 0.2s;
+    }
+
     @media (max-width: 640px) {
       .map-legend-container {
         width: calc(100vw - 32px);
@@ -611,8 +687,29 @@
               <input type="text" id="edit-rep-name" required placeholder="Örn. Ahmet Yılmaz">
             </div>
             <div class="form-group">
-              <label for="edit-rep-color">Renk Kodu (Hex)</label>
-              <input type="color" id="edit-rep-color" style="height: 40px; padding: 0; cursor: pointer;">
+              <label>Renk Seçimi</label>
+              <div class="custom-color-picker" id="picker-edit-rep">
+                <div class="preset-colors">
+                  <div class="preset-dot" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+                  <div class="preset-dot" style="background-color: #10b981;" data-color="#10b981"></div>
+                  <div class="preset-dot" style="background-color: #f59e0b;" data-color="#f59e0b"></div>
+                  <div class="preset-dot" style="background-color: #ef4444;" data-color="#ef4444"></div>
+                  <div class="preset-dot" style="background-color: #8b5cf6;" data-color="#8b5cf6"></div>
+                  <div class="preset-dot" style="background-color: #ec4899;" data-color="#ec4899"></div>
+                  <div class="preset-dot" style="background-color: #06b6d4;" data-color="#06b6d4"></div>
+                  <div class="preset-dot" style="background-color: #f43f5e;" data-color="#f43f5e"></div>
+                  <div class="preset-dot" style="background-color: #14b8a6;" data-color="#14b8a6"></div>
+                  <div class="preset-dot" style="background-color: #84cc16;" data-color="#84cc16"></div>
+                  <div class="preset-dot" style="background-color: #a855f7;" data-color="#a855f7"></div>
+                  <div class="preset-dot" style="background-color: #f97316;" data-color="#f97316"></div>
+                </div>
+                <div class="custom-color-input-wrap">
+                  <span class="hash-prefix">#</span>
+                  <input type="text" class="custom-hex-text" placeholder="Özel HEX kodu girin" maxlength="6">
+                  <div class="custom-color-preview"></div>
+                </div>
+                <input type="hidden" id="edit-rep-color" value="#3b82f6">
+              </div>
             </div>
             <div class="form-group">
               <label for="edit-rep-pass">Yeni Şifre (İsteğe Bağlı)</label>
@@ -655,8 +752,29 @@
               <input type="text" id="rep-name" required placeholder="Örn. Ahmet Yılmaz">
             </div>
             <div class="form-group">
-              <label for="rep-color">Renk Kodu (Hex)</label>
-              <input type="color" id="rep-color" value="#3b82f6" style="height: 40px; padding: 0; cursor: pointer;">
+              <label>Renk Seçimi</label>
+              <div class="custom-color-picker" id="picker-create-rep">
+                <div class="preset-colors">
+                  <div class="preset-dot selected" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+                  <div class="preset-dot" style="background-color: #10b981;" data-color="#10b981"></div>
+                  <div class="preset-dot" style="background-color: #f59e0b;" data-color="#f59e0b"></div>
+                  <div class="preset-dot" style="background-color: #ef4444;" data-color="#ef4444"></div>
+                  <div class="preset-dot" style="background-color: #8b5cf6;" data-color="#8b5cf6"></div>
+                  <div class="preset-dot" style="background-color: #ec4899;" data-color="#ec4899"></div>
+                  <div class="preset-dot" style="background-color: #06b6d4;" data-color="#06b6d4"></div>
+                  <div class="preset-dot" style="background-color: #f43f5e;" data-color="#f43f5e"></div>
+                  <div class="preset-dot" style="background-color: #14b8a6;" data-color="#14b8a6"></div>
+                  <div class="preset-dot" style="background-color: #84cc16;" data-color="#84cc16"></div>
+                  <div class="preset-dot" style="background-color: #a855f7;" data-color="#a855f7"></div>
+                  <div class="preset-dot" style="background-color: #f97316;" data-color="#f97316"></div>
+                </div>
+                <div class="custom-color-input-wrap">
+                  <span class="hash-prefix">#</span>
+                  <input type="text" class="custom-hex-text" placeholder="Özel HEX kodu girin" maxlength="6">
+                  <div class="custom-color-preview"></div>
+                </div>
+                <input type="hidden" id="rep-color" value="#3b82f6">
+              </div>
             </div>
             <div class="form-group">
               <label for="rep-pass">Şifre</label>
