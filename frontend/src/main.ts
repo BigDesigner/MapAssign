@@ -12,6 +12,26 @@ function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   init.credentials = 'include';
   return fetch(url, init);
 }
+
+function normalizeForSearch(str: string): string {
+  return str
+    .replace(/İ/g, 'i')
+    .replace(/ı/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/Ğ/g, 'g')
+    .replace(/ğ/g, 'g')
+    .replace(/Ü/g, 'u')
+    .replace(/ü/g, 'u')
+    .replace(/Ş/g, 's')
+    .replace(/ş/g, 's')
+    .replace(/Ö/g, 'o')
+    .replace(/ö/g, 'o')
+    .replace(/Ç/g, 'c')
+    .replace(/ç/g, 'c')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
 interface Representative {
   id: number;
   representative_code: string;
@@ -477,7 +497,7 @@ class AppController {
 
     // Map Autocomplete Search
     this.mapSearchInput.addEventListener('input', () => {
-      const q = this.mapSearchInput.value.trim().toLowerCase();
+      const q = normalizeForSearch(this.mapSearchInput.value.trim());
       if (!q) {
         this.mapSearchSuggestions.style.display = 'none';
         this.mapSearchClear.style.display = 'none';
@@ -488,7 +508,7 @@ class AppController {
 
       // Find matching countries in COUNTRY_NAMES
       const matches = Object.entries(COUNTRY_NAMES)
-        .filter(([code, name]) => name.toLowerCase().includes(q) || code.includes(q))
+        .filter(([code, name]) => normalizeForSearch(name).includes(q) || normalizeForSearch(code).includes(q))
         .slice(0, 8); // top 8 matches
 
       if (matches.length > 0) {
