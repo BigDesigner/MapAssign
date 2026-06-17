@@ -105,6 +105,11 @@ class AppController {
   private mapSearchSuggestions = document.getElementById('map-search-suggestions') as HTMLElement;
   private mapSearchSuggestionsList = document.getElementById('map-search-suggestions-list') as HTMLUListElement;
 
+  private leftMenuToggle = document.getElementById('left-menu-toggle') as HTMLButtonElement;
+  private rightMenuToggle = document.getElementById('right-menu-toggle') as HTMLButtonElement;
+  private leftSidebar = document.getElementById('left-sidebar') as HTMLElement;
+  private mapSearchPanel = document.getElementById('map-search-panel') as HTMLElement;
+
   private repName = '';
   private repColor = '';
 
@@ -180,6 +185,10 @@ class AppController {
       this.editRepForm.reset();
       document.getElementById('map-container')?.classList.remove('admin-mode');
       this.mapLegendContainer.style.display = 'none';
+      this.leftMenuToggle.style.display = 'none';
+      this.rightMenuToggle.style.display = 'none';
+      this.leftSidebar.classList.remove('hidden-panel');
+      this.mapSearchPanel.classList.remove('hidden-panel');
       if (typeof (window as any).turnstile !== 'undefined') {
         (window as any).turnstile.reset();
       }
@@ -576,6 +585,15 @@ class AppController {
         this.mapSearchSuggestions.style.display = 'none';
       }
     });
+
+    // Menu Toggle Logic
+    this.leftMenuToggle.addEventListener('click', () => {
+      this.leftSidebar.classList.toggle('hidden-panel');
+    });
+
+    this.rightMenuToggle.addEventListener('click', () => {
+      this.mapSearchPanel.classList.toggle('hidden-panel');
+    });
   }
 
   private async bootstrapApp(): Promise<void> {
@@ -597,6 +615,10 @@ class AppController {
       this.mapEngine.destroy();
       this.mapEngine = null;
     }
+
+    // Show menu toggles
+    this.leftMenuToggle.style.display = 'flex';
+    this.rightMenuToggle.style.display = 'flex';
 
     if (this.role === 'admin') {
       container.classList.add('admin-mode');
