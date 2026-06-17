@@ -2,6 +2,7 @@ import { verifyAdminPassword, verifyPassword, hashPassword } from './auth';
 import { createSession, getSession, destroySession, SessionData } from './session';
 import { isRateLimited } from './rateLimit';
 import { isValidCountryCode, isValidColorHex, sanitizeInput, isValidRepresentativeCode, isValidPassword } from './validation';
+import { enqueueJob, processQueue } from './queue';
 
 const DUMMY_HASH = '73616c7473616c7473616c7473616c74:6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f66';
 
@@ -369,6 +370,10 @@ export default {
           await env.DB.prepare('DELETE FROM country_assignments WHERE country_code = ?')
             .bind(countryCode.toLowerCase())
             .run();
+          
+          await enqueueJob(env, 'move_country_folders', { country_code: countryCode.toLowerCase(), new_representative_id: null });
+          ctx.waitUntil(processQueue(env).catch(console.error));
+          
           return jsonResponse({ success: true, message: 'Assignment cleared.' }, 200, headers);
         } else {
           // Verify representative exists
@@ -389,6 +394,9 @@ export default {
           )
             .bind(countryCode.toLowerCase(), representativeId)
             .run();
+
+          await enqueueJob(env, 'move_country_folders', { country_code: countryCode.toLowerCase(), new_representative_id: representativeId });
+          ctx.waitUntil(processQueue(env).catch(console.error));
 
           return jsonResponse({ success: true, message: 'Assignment updated.' }, 200, headers);
         }
