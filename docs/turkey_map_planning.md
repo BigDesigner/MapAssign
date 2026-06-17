@@ -12,13 +12,14 @@ Mevcut tekil harita yapısı, hem Dünya hem de Türkiye haritalarını destekle
 * Admin giriş yaptığında veya ana ekrandayken bir **Kapsam Seçici (Scope Selector)** (örneğin dikey bir toggle veya dropdown) aracılığıyla "Dünya Haritası" veya "Türkiye Haritası" arasında geçiş yapabilecektir.
 * Seçilen kapsama göre:
   * Harita SVG'si dinamik olarak yüklenecek (Dünya SVG'si ya da 81 ilden oluşan Türkiye SVG'si).
-  * Temsilci listesi ve temsilciye ait atama listeleri o kapsama göre filtrelenerek yüklenecektir.
+  * Temsilci listesi, temsilciye ait atama listeleri ve müşteri listeleri o kapsama göre filtrelenerek yüklenecektir.
 
 ### B. Kapsam Bazlı Ayrıştırma (Scope Isolation)
 * **Temsilciler (Representatives):** Bir temsilci ya sadece Dünya haritası için (`world`) ya da sadece Türkiye haritası için (`turkey`) tanımlanacaktır.
-* **Atamalar (Assignments):** Dünya haritasında atamalar ülke bazlı (ISO kodları ile, örn. `IT`), Türkiye haritasında ise il bazlı (plaka kodları veya ISO 3166-2 kodları ile, örn. `TR-34`, `TR-06`) yapılacaktır.
+* **Atamalar (Assignments):** Dünya haritasında atamalar ülke bazlı (ISO kodları ile, örn. `DE`), Türkiye haritasında ise il bazlı (plaka kodları veya ISO 3166-2 kodları ile, örn. `TR-34`, `TR-06`) yapılacaktır.
+* **Müşteriler (Customers):** Müşteriler de `map_scope` bilgisiyle birbirinden ayrılacak, böylece iki haritanın müşteri tabanları çakışmayacaktır.
 
-### C. Dil ve Lokalizasyon (I18n)
+### C. Dil ve Yerelleştirme (I18n)
 * **Dünya Haritası:** UI metinleri, butonlar, uyarılar ve ülke tooltip'leri tamamen **İngilizce** olacaktır.
 * **Türkiye Haritası:** UI metinleri, butonlar, temsilci ünvanları, il tooltip'leri ve arayüzdeki her şey tamamen **Türkçe** olacaktır.
 * İstemci tarafında dile duyarlı metinler için dinamik bir dil dosyası (`i18n.ts`) veya arayüz çeviri nesnesi kullanılacaktır.
@@ -27,26 +28,11 @@ Mevcut tekil harita yapısı, hem Dünya hem de Türkiye haritalarını destekle
 
 ## 2. Veritabanı Şeması Değişiklikleri
 
-D1 veritabanındaki mevcut şema, kapsamları desteklemek üzere güncellenecektir.
+D1 veritabanındaki şema, hem Türkiye hem de CRM yapısını destekleyecek şekilde birleştirilmiştir. `schema.sql` dosyasında aşağıdaki tablolar güncellenmiş ve birleştirilmiştir (Ayrıntılar için [Nihai Entegrasyon Planı](file:///c:/Users/bigde/.antigravity/MapAssign/docs/nihai_entegrasyon_plani.md) dokümanına bakınız):
 
-### `representatives` Tablosu
-Temsilcilerin hangi harita kapsamında geçerli olduğunu belirtmek için bir `scope` kolonu eklenecektir.
-```sql
-ALTER TABLE representatives ADD COLUMN scope TEXT CHECK(scope IN ('world', 'turkey')) NOT NULL DEFAULT 'world';
-```
-
-### `country_assignments` Tablosu
-Mevcut tablo ismi daha genel bir isim olan `assignments` olarak güncellenecek veya yeni bir `scope` alanı ile birincil anahtar genişletilecektir.
-```sql
--- Mevcut country_assignments tablosunun güncellenmesi veya yeni şema:
-CREATE TABLE IF NOT EXISTS assignments (
-  scope TEXT CHECK(scope IN ('world', 'turkey')) NOT NULL,
-  code TEXT NOT NULL, -- Ülke kodu (örn. 'IT') veya İl kodu (örn. 'TR-34')
-  representative_id INTEGER NOT NULL,
-  PRIMARY KEY (scope, code),
-  FOREIGN KEY (representative_id) REFERENCES representatives(id) ON DELETE CASCADE
-);
-```
+*   `representatives` tablosuna `map_scope` ve `drive_folder_id` eklenmiştir.
+*   `assignments` tablosu `map_scope` ve `region_code` composite key yapısına geçirilmiştir.
+*   `customers` tablosu `map_scope` ve `region_code` (örn. `TR-34` veya `DE`) alanlarıyla her iki haritayı da destekleyecek şekilde normalize edilmiştir.
 
 ---
 
@@ -63,6 +49,9 @@ export const TRANSLATIONS = {
     unassignBtn: "Unassign",
     changePass: "Change Password",
     logout: "Logout",
+    customers: "Customers",
+    quotes: "Quotes",
+    searchPlaceholder: "Search by name, country, email...",
     // ...diğer İngilizce metinler
   },
   turkey: {
@@ -72,6 +61,9 @@ export const TRANSLATIONS = {
     unassignBtn: "Atamayı Kaldır",
     changePass: "Şifre Değiştir",
     logout: "Çıkış Yap",
+    customers: "Müşteriler",
+    quotes: "Teklifler",
+    searchPlaceholder: "İsim, il, e-posta ile ara...",
     // ...diğer Türkçe metinler
   }
 };
@@ -82,23 +74,16 @@ export const TRANSLATIONS = {
 ## 4. Uygulama Adımları (Task List)
 
 ### Aşama 1: Veritabanı ve API Hazırlığı
-- [ ] D1 veritabanı şemasına `scope` kolonlarını eklemek/güncellemek için migrasyon SQL'i hazırlama ve çalıştırma.
-- [ ] Backend API'sini (`backend/index.ts`) `scope` parametresini alacak şekilde güncelleme:
-  * `POST /api/admin/representatives` (kapsama göre listeleme ve ekleme)
-  * `POST /api/admin/assign` ve `/api/admin/unassign` (kapsam bazlı atama)
-  * `GET /api/map/state` (kapsam bazlı harita durumunu dönme)
+- [ ] D1 veritabanı şemasına `scope` ve `region_code` alanlarının eklenmesi ve veritabanı migrasyonunun uygulanması.
+- [ ] Backend API'sinin (`backend/index.ts`) `scope` parametresini alacak şekilde güncellenmesi.
+- [ ] Türkiye ve Dünya temsilcilerinin kendi oturum açma (login) akışlarında sadece kendi harita verilerine erişebilmelerinin sağlanması.
 
 ### Aşama 2: Ön Yüz SVG ve Harita Motoru Güncellemesi
-- [ ] Türkiye'nin 81 il sınırını içeren temiz ve optimize edilmiş bir SVG harita dosyasını projeye dahil etme (`frontend/turkey.svg`).
-- [ ] `frontend/src/countryNames.ts` benzeri, Türkiye illerini ve plaka kodlarını içeren `frontend/src/cityNames.ts` dosyasını oluşturma.
-- [ ] `MapEngine` sınıfını, Türkiye haritasının il sınırlarına ve tıklama/hover olaylarına uyumlu hale getirme.
+- [ ] Türkiye'nin 81 il sınırını içeren temiz ve optimize edilmiş bir SVG harita dosyasının eklenmesi (`frontend/public/turkey.svg`).
+- [ ] `frontend/src/countryNames.ts` benzeri, Türkiye illerini ve plaka kodlarını içeren `frontend/src/cityNames.ts` dosyasının oluşturulması.
+- [ ] `MapEngine` sınıfının Türkiye haritasının il sınırlarına ve tıklama/hover olaylarına uyumlu hale getirilmesi.
 
 ### Aşama 3: Dinamik Kapsam ve Dil Geçişi
-- [ ] Arayüze "Dünya / Türkiye" kapsam geçiş düğmesi ekleme.
-- [ ] `i18n.ts` modülünü oluşturma ve arayüzdeki statik metinleri (başlıklar, butonlar vb.) seçili kapsama göre dinamik doldurma.
-- [ ] Oturum açma ekranına veya oturum doğrulama API'sine temsilcinin hangi harita kapsamında yetkili olduğunu (`scope`) ekleme; böylece temsilci giriş yaptığında otomatik olarak kendi haritasına yönlendirilecek.
-
-### Aşama 4: Test ve Dağıtım
-- [ ] Admin panelinde iki harita arasında sorunsuz geçiş yapıldığının ve verilerin birbirine karışmadığının doğrulanması.
-- [ ] Temsilci girişlerinde sadece ilgili haritanın ve Türkçe/İngilizce dillerinin doğru yüklendiğinin doğrulanması.
-- [ ] Değişikliklerin canlıya (`production`) gönderilmesi.
+- [ ] Arayüze "Dünya / Türkiye" kapsam geçiş düğmesi eklenmesi.
+- [ ] `i18n.ts` modülünün oluşturulması ve arayüzdeki statik metinlerin seçili kapsama göre dinamik doldurulması.
+- [ ] Oturum açma doğrulamasına temsilcinin hangi harita kapsamında yetkili olduğunu (`map_scope`) ekleme; böylece temsilci giriş yaptığında otomatik olarak kendi haritasına ve diline yönlendirilecek.
