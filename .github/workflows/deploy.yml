@@ -22,7 +22,16 @@ jobs:
       - name: Install Root Dependencies
         run: npm ci
 
-      # --- 1. Deploy Cloudflare Worker (Backend) ---
+      # --- 1. Migrate Production Database ---
+      - name: Migrate Database (D1)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: '.'
+          command: d1 execute DB --remote --file=./schema.sql
+
+      # --- 2. Deploy Cloudflare Worker (Backend) ---
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
