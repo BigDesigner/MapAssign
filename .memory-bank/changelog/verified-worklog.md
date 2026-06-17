@@ -9,6 +9,8 @@
 - Migrated legacy `schema.sql` to include `customers`, `quotes`, `countries`, and `background_jobs`.
 - Integrated background queue (`queue.ts`) into `backend/index.ts` allowing edge-safe long-running task processing.
 - Transitioned repository to Project Memory Bank standard structure.
+- Updated GitHub Actions CI/CD pipeline (`deploy.yml`) to automatically apply D1 schema changes on push.
+- Implemented minimalist left/right toggle icons (`lucide-sidebar`) for sidebar and search panel on desktop and mobile.
 
 ## Known Incomplete Work
 - Actual API connection between `queue.ts` logic and Google Drive API.
