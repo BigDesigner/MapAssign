@@ -9,7 +9,7 @@ Bu belge, dünya haritası temsilci sistemine müşteri kayıtlarının, görü�
 Büyük ve yer kaplayan dosyalar (PDF teklifler, belgeler) Google Drive üzerinde saklanırken, arama, sıralama ve finansal raporlama işlemlerinin milisaniyeler içinde yapılabilmesi için yapısal veriler **Cloudflare D1 veritabanında** tutulacaktır.
 
 ### A. Müşteriler (`customers`) Tablosu
-Müşterinin temsilci bilgisi, bulunduğu ülke atamasından dinamik olarak türetilecektir (`country_assignments` ile JOIN). `FOREIGN KEY` kısıtlaması ile ataması yapılmamış (veya silinmiş) bir ülkeye müşteri eklenmesi engellenerek veritabanı bütünlüğü sağlanır. Müşteri ID'si SQLite'ın güvenli `AUTOINCREMENT` özelliği ile üretilir.
+Müşterinin temsilci bilgisi, bulunduğu ülke atamasından dinamik olarak türetilecektir (`country_assignments` ile JOIN). `FOREIGN KEY` kısıtlaması ile master `countries` tablosuna bağlanarak güvenli veri bütünlüğü sağlanır. Ülke atamasının silinmesi veya değiştirilmesi müşteri kayıtlarını kilitlemez. Müşteri ID'si SQLite'ın güvenli `AUTOINCREMENT` özelliği ile üretilir. Silinen kayıtların tespiti için `deleted_at` (soft delete) kolonu kullanılır.
 
 ```sql
 CREATE TABLE IF NOT EXISTS customers (
@@ -24,20 +24,25 @@ CREATE TABLE IF NOT EXISTS customers (
     drive_folder_id TEXT, -- Müşterinin ana Google Drive klasör ID'si
     notes_doc_id TEXT, -- Interview_Notes Google Doc dosyasının ID'si
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (country_code) REFERENCES country_assignments(country_code) ON DELETE RESTRICT
+    deleted_at DATETIME DEFAULT NULL, -- Soft Delete
+    FOREIGN KEY (country_code) REFERENCES countries(code) ON DELETE RESTRICT
 );
 ```
 
 ### B. Teklifler (`quotes`) Tablosu
+Tekliflerin raporlama aşamasında para birimlerinin birbirine karışıp yanlış toplamlar üretmesini engellemek için teklif anındaki kurdan hesaplanan normalleştirilmiş `amount_usd` kolonu şemaya eklenmiştir.
+
 ```sql
 CREATE TABLE IF NOT EXISTS quotes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER NOT NULL,
     amount REAL NOT NULL, -- Teklif Tutarı
     currency TEXT NOT NULL CHECK(currency IN ('USD', 'EUR', 'TRY')), -- Para Birimi
+    amount_usd REAL NOT NULL, -- Raporlama için tek tip para birimi
     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
     drive_file_id TEXT, -- Teklif PDF dosyasının Drive ID'si
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    deleted_at DATETIME DEFAULT NULL, -- Soft Delete
     FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 ```
