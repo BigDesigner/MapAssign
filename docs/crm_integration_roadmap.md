@@ -69,18 +69,19 @@ Müşteri oluşturulduğunda sistem arka planda Google Drive API'yi tetikleyerek
 ```
 
 ### B. Otomasyon Süreci
-1.  **Müşteri Ekleme**: Web panelinden yeni müşteri bilgileri girilip kaydedilir.
-2.  **Klasör Üretimi**: Google Drive API kullanılarak temsilcinin ana klasöründe sırasıyla ülke ve `[Müşteri_Kodu]` klasörleri oluşturulur.
-3.  **Alt Klasör & Belge**: Bu klasörün altında `Quotes` ve `Other_Documents` klasörleri ile `Interview_Notes` adında şablondan türetilmiş boş bir Google Doc dökümanı üretilir.
-4.  **Veritabanı Eşleşmesi**: Oluşturulan klasör ve döküman ID'leri D1 `customers` tablosuna kaydedilir.
+### B. Otomasyon Süreci (Arka Plan İş Kuyruğu)
+1.  **Müşteri Ekleme**: Web panelinden yeni müşteri bilgileri girilip kaydedilir. API veriyi D1 veritabanına yazar.
+2.  **Kuyruğa Ekleme**: Ağır Google Drive işlemleri Workers CPU sınırlarını aşmamak için `background_jobs` kuyruğuna atılır ve `ctx.waitUntil()` ile asenkron olarak arka planda hemen tetiklenir. API temsilciye 10ms içinde başarılı yanıt döner.
+3.  **Arka Plan Klasör Üretimi**: Google Drive API kullanılarak temsilcinin kök klasöründe sırasıyla ülke ve `[Müşteri_Kodu]` klasörleri, alt klasörleri ve `Interview_Notes` Google Doc belgesi paralel olarak (`Promise.all()`) oluşturulur.
+4.  **Veritabanı Eşleşmesi**: Arka plan işi tamamlandığında klasör ve döküman ID'leri D1 `customers` tablosuna güncellenerek kaydedilir.
 
 ---
 
-## 3. Yetkilendirme ve Güvenlik (Workspace Service Account)
+## 3. Yetkilendirme ve Güvenlik (Workspace Service Account & İzin Kalıtımı)
 
 *   **Merkezi Hizmet Hesabı (Service Account)**: Google Drive API işlemleri, tüm organizasyon dosyaları üzerinde yetkili bir Google Service Account kimliğiyle backend üzerinden gerçekleştirilir. Dosyalar kişilerin değil, kurumun ortak alanında (Shared Drive) saklanır.
-*   **Temsilci Erişimlerinin Yönetimi**: Temsilciler kendi kurumsal Google hesaplarıyla sisteme giriş yaptıklarında, servis hesabı sadece temsilcinin yetkili olduğu `[Temsilci_Kodu]` klasörünü temsilci e-posta adresiyle paylaşır (Read/Write izinleri). Temsilciler diğer temsilcilerin dosyalarına erişemez.
-*   **Güvenli Taşıma**: Temsilci değişikliklerinde, ülke klasörünün `drive_folder_id` kullanılarak ebeveyn klasörü (parent) servis hesabı aracılığıyla tek bir API isteğiyle güncellenerek güvenli bir şekilde aktarılır.
+*   **Kalıtımsal İzin Yönetimi (Root-Only Sharing)**: Temsilciler için tek tek ülke veya müşteri düzeyinde ayrı ayrı klasör/dosya paylaşımları yapılmayacaktır. Yetkiler sadece temsilcinin kök klasörü olan `[Temsilci_Kodu]/` (veya `REP_ID_[id]`) üzerinden temsilcinin e-postasına verilir. Altındaki tüm ülke ve müşteri klasörleri, erişim yetkilerini **Google Drive kalıtım (inheritance)** mekanizmasıyla otomatik devralır. Bu sayede dosya başına 1000 izin limiti gibi sınırlar asla aşılmaz.
+*   **Güvenli Taşıma ve Erişim Değişimi**: Temsilci değişikliklerinde veya arşivlemede, ülke veya müşteri klasörünün `parents` ebeveyn ID'si güncellenerek klasör taşınır. Taşıma anında eski temsilcinin erişimi anında kesilir ve yeni temsilcinin yetkisi kalıtım yoluyla otomatik başlar.
 
 ---
 
@@ -93,7 +94,7 @@ Müşteri oluşturulduğunda sistem arka planda Google Drive API'yi tetikleyerek
 ### B. Müşteri Tablo Görünümü & Rol Bazlı İzolasyon
 *   Temsilciler ve adminler, kapsamlı bir tablo sayfasını açabilirler.
 *   **Veri İzolasyonu**: Temsilciler sadece kendilerine atanmış ülkelerdeki müşterileri görebilirken, Admin tüm müşterileri listeleyebilir.
-*   **Arama (Search)**: Arama kutusuna müşteri adı, ülke, mail, telefon veya ürün grubu yazıldığında anlık filtreleme yapılır.
+*   **Kararlı Arama (Search)**: Yarış durumlarını (Race Condition) tamamen önlemek için arama kutusuna yazılan her karakterde filtreleme yapılmaz. Arama işlemi, arama kutusunun yanındaki **"Ara" (Search) butonuna tıklandığında** veya **Enter tuşuna basıldığında** tetiklenir.
 *   **Sıralama**: A-Z / Z-A alfabetik sıralama ve tarih bazlı sıralama seçenekleri bulunur.
 
 ### C. Çift Harita Modu

@@ -13,7 +13,7 @@ Mevcut yol haritaları ve şemalar üzerinde yapılan detaylı incelemede aşağ
 *   **Çözüm:** `customers` tablosundan `representative_id` kaldırılmıştır. Bir müşterinin temsilcisi, bulunduğu ülkeye atanan temsilcidir. Sorgulama sırasında `country_assignments` tablosu üzerinden dinamik `JOIN` yapılacaktır.
 
 ### B. Müşteri Atama Kilidi ve FK Çıkmazı (Referential Integrity Logic Lock)
-*   **Hata:** `customers` tablosunun `FOREIGN KEY (country_code) REFERENCES country_assignments(country_code)` şeklinde bağlanması. Bu durumda bir ülkedeki temsilci atamasını silmek veya değiştirmek istediğimizde, o ülkede müşteri olduğu sürece `ON DELETE RESTRICT` kısıtlaması atamanın silinmesini engeller. Temsilci silindiğinde ise `ON DELETE CASCADE` ülke atamasını silmeye çalışır ancak müşteri kısıtı yüzünden hata verir ve temsilci silinemez. Ayrıca temsilci atanmamış bir ülkeye müşteri eklenemez hale gelir.
+*   **Hata:** `customers` tablosunun `FOREIGN KEY (country_code) REFERENCES country_assignments(country_code)` şeklinde bağlanması. Bu durumda bir ülkedeki temsilci atamasını silmek veya değiştirmek istediğimizde, o ülkede müşteri olduğu sürece `ON DELETE RESTRICT` kısıtlaması atamanın silinmesini engeller. Temsilci silindiğinde ise `ON DELETE CASCADE` ülke atamasını silmeye çalışır ancak müşteri kısıtı yüzünden hata verir ve temsilci silinemez. Ayrıca temsilci atanmamış bir ülkeye müşteri eklenez hale gelir.
 *   **Çözüm:** `customers.country_code` kolonu, `country_assignments` yerine doğrudan **`countries(code)`** master tablosuna `FOREIGN KEY` ile bağlanmıştır. Bir ülkenin o an bir temsilci ataması olup olmaması müşterinin veritabanındaki varlığını etkilemez. Müşterinin o anki temsilcisi dinamik olarak `LEFT JOIN` sorgusuyla çekilir; eğer atama yoksa "Temsilci Atanmamış" olarak gösterilir.
 
 ### C. CUST-1001 Formatında Metinsel Birincil Anahtar
@@ -40,9 +40,9 @@ Mevcut yol haritaları ve şemalar üzerinde yapılan detaylı incelemede aşağ
 *   **Hata:** Farklı para birimlerinde (`USD`, `EUR`, `TRY`) teklifler toplanırken döviz kuru dönüştürmesi yapılmadan doğrudan `SUM(amount)` yapılması.
 *   **Çözüm:** Döviz kuru/parite dönüştürme karmaşıklığına girmeksizin, raporlamalar para birimine göre gruplanarak ayrı toplamlar halinde arayüzde gösterilecektir (Örn: Toplam USD, Toplam EUR, Toplam TRY). Böylece ek kur güncelleme modüllerine ihtiyaç kalmaz.
 
-### I. Ülke Değişimlerinde Eski İzinlerin Kalması (Permission Data Leakage)
-*   **Hata:** Ülke temsilcisi değiştiğinde eski temsilcinin Drive klasörü ve Google Doc üzerindeki erişim yetkilerinin kaldırılmaması, eski temsilcinin geçmiş linklerden verilere erişebilmesi.
-*   **Çözüm:** Ülke transferi veya temsilci değişikliği yapıldığında, backend servisi Google Drive API üzerinden eski temsilcinin yetkilerini kaldıracak ve yeni temsilciye yetki tanımlayacaktır.
+### I. Ülke Değişimlerinde Eski İzinlerin Kalması ve 1000 İzin Limiti (Permission Inheritance & Root-Only Sharing)
+*   **Hata:** Ülke temsilcisi değiştiğinde veya müşteri açıldığında her alt klasör ve dosya için tek tek Drive API üzerinden izin verilmeye çalışılması. Bu hem Workers CPU limitlerini tüketir hem de Google Drive'ın dosya başına **1000 paylaşılan izin** sınırına takılmasına neden olur.
+*   **Çözüm:** Temsilci erişimleri sadece ve sadece temsilcinin kök klasörü olan `[Temsilci_Kodu]/` (veya `REP_ID_[id]`) üzerinden yönetilecektir. Temsilciler bu klasör üzerinde yetkilendirilir. Altındaki tüm ülke ve müşteri klasörleri, erişim yetkilerini **Google Drive kalıtım (inheritance)** mekanizmasıyla otomatik devralır. Ülke transferinde veya arşivlemede klasör ebeveyni (`parents`) güncellendiği anda, eski temsilcinin erişimi anında kesilir ve yeni temsilcinin yetkisi kalıtımla otomatik başlar. Tek tek dosya/klasör düzeyinde API ile izin yönetimi yapılmayacaktır.
 
 ### J. Müşteri/Teklif Silmede Drive Evrak Çöplüğü ve Veri Güvenliği (Drive Garbage on Physical Delete)
 *   **Hata:** Veritabanından fiziksel silme yapıldığında Drive'daki PDF ve dokümanların yetim kalması. Ayrıca temsilcilerin kötü niyetli veya kazara müşteri/dosya silerek şirket sırlarını yok etme riski.
@@ -52,9 +52,11 @@ Mevcut yol haritaları ve şemalar üzerinde yapılan detaylı incelemede aşağ
 *   **Hata:** `country_assignments` tablosunda `country_code` için `countries(code)` referans kısıtlamasının olmaması ve geçersiz ülke tanımlanabilmesi.
 *   **Çözüm:** `FOREIGN KEY (country_code) REFERENCES countries(code) ON DELETE RESTRICT` kısıtlaması eklenmiştir.
 
-### L. "Dual-Write" Senkronizasyon Kaybı için UI Yükleme Ekranı (UI Progress Flow & Error Handlers)
-*   **Hata:** Kaydetme esnasında hangi adımın başarısız olduğunu temsilcinin görememesi ve yarım kalan işlemlerin yönetilememesi.
-*   **Çözüm:** Kaydetme işleminde aşamalı yükleme ekranı (loading screen) gösterilecek, veritabanı ve Drive yazma başarı durumlarına göre temsilciye yönlendirmeler yapılacaktır.
+### L. Workers CPU Limitleri ve Arama Yarış Durumu (Workers CPU & Search Concurrency Fixes)
+*   **Hata:** Cloudflare Workers ücretsiz paketindeki 50ms CPU sınırı ve hızlı aramada tetiklenen isteklerin birbiri ardına gelerek yanlış verileri getirmesi (race condition).
+*   **Çözüm:**
+    1.  **Arka Plan İş Kuyruğu (Background Queue):** Google Drive üzerindeki tüm ağır klasör ve dosya şablonu kopyalama işlemleri, Workers CPU limitlerine takılmamak için D1 tabanlı asenkron bir `background_jobs` kuyruğu (Worker `ctx.waitUntil()` desteğiyle) üzerinden yürütülecektir. API veritabanına yazıp işi kuyruğa ekledikten hemen sonra (10ms içinde) yanıt dönecektir.
+    2.  **Kararlı Arama UI:** Arama kutusuna yazılan her karakterde filtreleme yapmak yerine, arama sorgusu sadece **Enter tuşuna basıldığında** veya **"Ara" (Search) butonuna tıklandığında** tetiklenecektir. Bu sayede yarış durumları tamamen önlenmiş ve stabilite sağlanmış olur.
 
 ---
 
@@ -123,12 +125,25 @@ CREATE TABLE IF NOT EXISTS quotes (
     FOREIGN KEY (deleted_by_representative_id) REFERENCES representatives(id) ON DELETE SET NULL
 );
 
+-- 6. Arka Plan İş Kuyruğu Tablosu (CF Workers CPU ve Kota Dostu)
+CREATE TABLE IF NOT EXISTS background_jobs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_type TEXT NOT NULL CHECK(job_type IN ('create_customer_folders', 'move_country_folders', 'archive_customer_folders')),
+    payload TEXT NOT NULL, -- JSON formatında işlem verileri (örn: { "customer_id": 123 })
+    status TEXT NOT NULL CHECK(status IN ('pending', 'processing', 'completed', 'failed')) DEFAULT 'pending',
+    attempts INTEGER DEFAULT 0,
+    error_message TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- İndeksler
 CREATE INDEX IF NOT EXISTS idx_assignment_rep ON country_assignments(representative_id);
 CREATE INDEX IF NOT EXISTS idx_customer_country ON customers(country_code);
 CREATE INDEX IF NOT EXISTS idx_quote_customer ON quotes(customer_id);
 CREATE INDEX IF NOT EXISTS idx_customer_deleted ON customers(deleted_at) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_quote_deleted ON quotes(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_jobs_status ON background_jobs(status);
 ```
 
 ---
@@ -150,16 +165,16 @@ CREATE INDEX IF NOT EXISTS idx_quote_deleted ON quotes(deleted_at) WHERE deleted
 ### B. Otomasyon & Taşıma Algoritması
 Bir ülkenin temsilcisi `Temsilci_A`'dan `Temsilci_B`'ye geçirildiğinde:
 1.  **D1 Güncellemesi:** `country_assignments` tablosunda `representative_id` değeri güncellenir.
-2.  **Drive API Tetiklenmesi:** İlgili ülke klasörünün `drive_folder_id` kullanılarak parent ID'si `Temsilci_A`'dan `Temsilci_B`'ye tek bir istekte geçirilir.
+2.  **Drive API Tetiklenmesi:** İlgili ülke klasörünün `drive_folder_id` kullanılarak parent ID'si `Temsilci_A`'dan `Temsilci_B`'ye tek bir istekte geçirilir. Yetki devri kalıtım yoluyla otomatik tamamlanır.
 
 ### C. "Dual-Write" Senkronizasyon Yükleme Ekranı ve Hata Karar Ağacı
 Müşteri ekleme butonuna basıldığında temsilcinin karşısına bir loading screen çıkar ve şu adımları anlık raporlar:
 1.  **Aşama 1: D1 Veritabanı Kaydı**
-    *   *Başarısız Olursa:* İşlem durdurulur. Temsilciye hata gösterilir ve formu düzenleyip **Tekrar Denemesi** (Retry) istenir. Drive'a hiçbir istek atılmaz.
-2.  **Aşama 2: Drive Müşteri Klasörü Oluşturma**
-    *   *Başarısız Olursa (API Hatası/Timeout):* Müşteri D1'e `drive_folder_id = NULL` ile kaydedilmiştir. Yükleme ekranı durdurulur ve şu uyarı gösterilir: *"Müşteri veritabanına kaydedildi ancak bulut klasörleri oluşturulamadı. Detay panelindeki 'Yeniden Bağla' butonunu kullanarak daha sonra deneyebilir veya admin ile iletişime geçebilirsiniz."*
-3.  **Aşama 3: Görüşme Notları ve Alt Klasör Şablonu**
-    *   *Başarısız Olursa:* Klasör oluşmuş ancak not dökümanı kopyalanamamıştır. Şu uyarı verilir: *"Müşteri klasörleri hazırlandı ancak görüşme notları oluşturulamadı. Detay panelinden 'Görüşme Notu Oluştur' butonu ile manuel olarak veya daha sonra yeniden deneyebilirsiniz."*
+    *   *Başarısız Olursa:* İşlem durdurulur. Temsilciye hata gösterilir ve formu düzenleyip **Tekrar Denemesi** (Retry) istenir. Kuyruğa iş eklenmez.
+2.  **Aşama 2: Arka Plan İş Tanımlama (Drive Müşteri Klasörü Kuyruğu)**
+    *   Müşteri başarıyla D1'e kaydedilir. Arka planda çalışacak `create_customer_folders` işi `background_jobs` tablosuna eklenir. Worker `ctx.waitUntil()` ile işi hemen arka planda asenkron olarak çalıştırmaya başlar.
+    *   *UI Cevabı:* Kayıt başarıyla tamamlanır ve UI'da *"Müşteri kaydedildi, Drive klasörleri arka planda senkronize ediliyor..."* uyarısı çıkar.
+    *   *Senkronizasyon Başarısız Olursa:* Müşteri kartında **"Drive Klasörlerini Yeniden Eşitle"** butonu çıkar. Temsilci bu butona basarak veya cron otomatik tetikleyerek işlemi yeniden çalıştırabilir.
 
 ### D. Müşteri/Teklif Silme ve Arşivleme Mantığı
 *   **Temsilci Silme Akışı:** Temsilci "Sil" butonuna bastığında müşteri veritabanından fiziksel olarak silinmez. Sadece `deleted_at = CURRENT_TIMESTAMP` ve `deleted_by_representative_id = [temsilci_id]` set edilir. Temsilci ekranından müşteri anında kaybolur.
@@ -170,6 +185,6 @@ Müşteri ekleme butonuna basıldığında temsilcinin karşısına bir loading 
 ---
 
 ## 4. Kullanıcı Arayüzü (UI)
-*   **Müşteri Tablosu & Arama:** Müşteri adı, ülke kodu, e-posta, telefon alanlarında büyük/küçük harf duyarsız arama. Temsilciler sadece kendi aktif ülkelerindeki müşterileri görür. Admin ise silinmiş/arşivlenmiş müşteriler dahil tüm listeyi kontrol edebilir.
+*   **Müşteri Tablosu & Arama:** Müşteri adı, ülke kodu, e-posta, telefon alanlarında büyük/küçük harf duyarsız arama. Yarış durumlarını (Race Condition) önlemek için arama işlemi, arama kutusuna yazı yazılırken değil, **Enter tuşuna basıldığında** veya arama kutusunun yanındaki **"Ara" (Search) butonuna tıklandığında** tetiklenir.
 *   **Raporlama Paneli:** `countries` tablosundaki `region` kolonundan yararlanılarak Kıta/Bölge bazlı (Örn: Avrupa) SQL `SUM(amount) GROUP BY currency` sorgusu çalıştırılır. Rapor ekranında teklifler para birimlerine bölünmüş olarak sunulur (USD, EUR, TRY ayrı satırlarda).
 *   **Renk Paleti İyileştirmesi:** Harita üzerinde göz yormayan, premium koyu tema görünümü sağlamak için modern pastel renk serisi (Yumuşak Mavi `#93c5fd`, Yumuşak Zümrüt `#a7f3d0`, vb.) kullanılır.
