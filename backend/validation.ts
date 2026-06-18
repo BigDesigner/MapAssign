@@ -23,6 +23,7 @@ export function sanitizeInput(str: string): string {
       case '>': return '&gt;';
       case '"': return '&quot;';
       case "'": return '&#x27;';
+      case '`': return '&#x60;';
       default: return match;
     }
   });

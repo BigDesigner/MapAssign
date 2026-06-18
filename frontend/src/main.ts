@@ -540,9 +540,16 @@ class AppController {
           const assignment = this.mapEngine ? this.mapEngine.assignmentsMap.get(code.toUpperCase()) : null;
           let badgeHtml = '<span class="suggestion-badge">Atanmamış</span>';
           if (assignment) {
+            const escapedName = String(assignment.name)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;')
+              .replace(/`/g, '&#x60;');
             badgeHtml = `<span class="suggestion-badge">
               <span class="suggestion-badge-dot" style="background-color: ${assignment.color_hex};"></span>
-              ${assignment.name}
+              ${escapedName}
             </span>`;
           }
           return `<li data-code="${code}">

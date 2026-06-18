@@ -63,7 +63,7 @@ async function getAuthenticatedSession(
   env: Env
 ): Promise<SessionData | null> {
   const cookies = parseCookies(request.headers.get('Cookie'));
-  const token = cookies['session'];
+  const token = cookies['__Host-session'] || cookies['session'];
   if (!token) return null;
   return getSession(env.SESSIONS, token);
 }
@@ -71,6 +71,9 @@ async function getAuthenticatedSession(
 function jsonResponse(data: any, status = 200, headers?: Headers): Response {
   const resHeaders = headers || new Headers();
   resHeaders.set('Content-Type', 'application/json');
+  resHeaders.set('X-Content-Type-Options', 'nosniff');
+  resHeaders.set('X-Frame-Options', 'DENY');
+  resHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   return new Response(JSON.stringify(data), {
     status,
     headers: resHeaders
@@ -88,7 +91,10 @@ export default {
     }
 
     // IP-based Rate Limiter (for state-changing endpoints)
-    const ip = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
+    const ip = request.headers.get('CF-Connecting-IP');
+    if (!ip && request.method === 'POST') {
+      return jsonResponse({ error: 'Direct access not allowed.' }, 403, headers);
+    }
     if (request.method === 'POST') {
       if (url.pathname === '/api/auth/login') {
         const loginLimited = await isRateLimited(env.SESSIONS, `login:${ip}`, 10, 60);
@@ -96,7 +102,9 @@ export default {
           return jsonResponse({ error: 'Çok fazla giriş denemesi. Lütfen 60 saniye sonra tekrar deneyin.' }, 429, headers);
         }
       } else {
-        const limited = await isRateLimited(env.SESSIONS, ip, 40, 60);
+        const isChangePassword = url.pathname === '/api/representative/change-password';
+        const limit = isChangePassword ? 5 : 40;
+        const limited = await isRateLimited(env.SESSIONS, ip as string, limit, 60);
         if (limited) {
           return jsonResponse({ error: 'Too many requests. Please try again later.' }, 429, headers);
         }
@@ -119,10 +127,8 @@ export default {
         } catch {}
       }
 
-      // Defense-in-depth: if session cookie exists, reject when both Origin and Referer are missing
-      const cookies = parseCookies(request.headers.get('Cookie'));
-      const hasSessionCookie = !!cookies['session'];
-      if (!clientOrigin && hasSessionCookie) {
+      // Defense-in-depth: Reject all POST requests if both Origin and Referer are missing
+      if (!clientOrigin) {
         return jsonResponse({ error: 'CSRF validation failed: Missing origin/referer headers.' }, 403, headers);
       }
 
@@ -183,7 +189,7 @@ export default {
           }
         } catch (err: any) {
           console.error('Turnstile verification request failed:', err);
-          return jsonResponse({ error: 'Turnstile doğrulama servisinde hata oluştu: ' + err.message }, 500, headers);
+          return jsonResponse({ error: 'Turnstile doğrulama servisinde hata oluştu.' }, 500, headers);
         }
 
         // Timing-Safe Credentials Verification
@@ -220,11 +226,11 @@ export default {
 
         if (isValid && role === 'admin') {
           const token = await createSession(env.SESSIONS, 'admin');
-          headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
+          headers.append('Set-Cookie', `__Host-session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
           return jsonResponse({ success: true, role: 'admin' }, 200, headers);
         } else if (isValid && role === 'representative' && repId !== undefined) {
           const token = await createSession(env.SESSIONS, 'representative', repId);
-          headers.append('Set-Cookie', `session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
+          headers.append('Set-Cookie', `__Host-session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=14400`);
           return jsonResponse({ success: true, role: 'representative', name: repName }, 200, headers);
         }
 
@@ -234,11 +240,12 @@ export default {
       // 2. POST /api/auth/logout
       if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
         const cookies = parseCookies(request.headers.get('Cookie'));
-        const token = cookies['session'];
+        const token = cookies['__Host-session'] || cookies['session'];
         if (token) {
           await destroySession(env.SESSIONS, token);
         }
-        headers.append('Set-Cookie', 'session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');
+        headers.append('Set-Cookie', '__Host-session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');
+        headers.append('Set-Cookie', 'session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'); // Clear legacy cookie too
         return jsonResponse({ success: true }, 200, headers);
       }
 
@@ -373,6 +380,10 @@ export default {
           return jsonResponse({ error: 'Invalid country code format.' }, 400, headers);
         }
 
+        if (representativeId !== null && (typeof representativeId !== 'number' || representativeId <= 0)) {
+          return jsonResponse({ error: 'Invalid representative ID format.' }, 400, headers);
+        }
+
         if (representativeId === null || representativeId === 0) {
           // Delete assignment
           await env.DB.prepare('DELETE FROM country_assignments WHERE country_code = ?')
@@ -456,7 +467,8 @@ export default {
             if (e.message && e.message.includes('UNIQUE')) {
               return jsonResponse({ error: 'Representative code already exists.' }, 409, headers);
             }
-            return jsonResponse({ error: 'Database error occurred: ' + e.message }, 500, headers);
+            console.error('Database error on create:', e);
+            return jsonResponse({ error: 'Internal Database Error' }, 500, headers);
           }
         } 
         
@@ -505,7 +517,8 @@ export default {
             if (e.message && e.message.includes('UNIQUE')) {
               return jsonResponse({ error: 'Representative code already exists.' }, 409, headers);
             }
-            return jsonResponse({ error: 'Database error occurred: ' + e.message }, 500, headers);
+            console.error('Database error on update:', e);
+            return jsonResponse({ error: 'Internal Database Error' }, 500, headers);
           }
         }
         
@@ -521,6 +534,13 @@ export default {
           if (!id) {
             return jsonResponse({ error: 'Representative ID required.' }, 400, headers);
           }
+
+          // Cancel pending jobs related to this representative
+          await env.DB.prepare(
+            `UPDATE background_jobs SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP 
+             WHERE status = 'pending' AND job_type = 'move_country_folders' 
+             AND json_extract(payload, '$.new_representative_id') = ?`
+          ).bind(id).run();
 
           // Delete assignments first to prevent orphan/dangling rows (defense-in-depth)
           await env.DB.prepare('DELETE FROM country_assignments WHERE representative_id = ?')
@@ -539,7 +559,8 @@ export default {
 
       return jsonResponse({ error: 'Not Found.' }, 404, headers);
     } catch (err: any) {
-      return jsonResponse({ error: err.message || 'Internal Server Error.' }, 500, headers);
+      console.error('Internal Server Error:', err);
+      return jsonResponse({ error: 'Internal Server Error.' }, 500, headers);
     }
   }
 };
