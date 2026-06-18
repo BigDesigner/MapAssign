@@ -9,7 +9,7 @@ export function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
-export async function hashPassword(password: string, saltHex?: string): Promise<string> {
+export async function hashPassword(password: string, saltHex?: string, iterations = 600000): Promise<string> {
   const encoder = new TextEncoder();
   const passwordBuffer = encoder.encode(password);
 
@@ -35,7 +35,7 @@ export async function hashPassword(password: string, saltHex?: string): Promise<
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
+      iterations: iterations,
       hash: 'SHA-256'
     },
     baseKey,
@@ -45,18 +45,28 @@ export async function hashPassword(password: string, saltHex?: string): Promise<
   const saltString = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
   const hashString = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-  return `${saltString}:${hashString}`;
+  return `${iterations}:${saltString}:${hashString}`;
 }
 
 export async function verifyPassword(password: string, storedHashWithSalt: string): Promise<boolean> {
   const parts = storedHashWithSalt.split(':');
-  if (parts.length !== 2) {
-    return false;
+  
+  if (parts.length === 2) {
+    // Legacy format: salt:hash (implied 100000 iterations)
+    const [saltHex, storedHash] = parts;
+    const inputHashWithSalt = await hashPassword(password, saltHex, 100000);
+    const inputHash = inputHashWithSalt.split(':')[2];
+    return timingSafeEqual(inputHash, storedHash);
+  } else if (parts.length === 3) {
+    // New format: iterations:salt:hash
+    const [iterationsStr, saltHex, storedHash] = parts;
+    const iterations = parseInt(iterationsStr, 10);
+    const inputHashWithSalt = await hashPassword(password, saltHex, iterations);
+    const inputHash = inputHashWithSalt.split(':')[2];
+    return timingSafeEqual(inputHash, storedHash);
   }
-  const [saltHex, storedHash] = parts;
-  const inputHashWithSalt = await hashPassword(password, saltHex);
-  const inputHash = inputHashWithSalt.split(':')[1];
-  return timingSafeEqual(inputHash, storedHash);
+  
+  return false;
 }
 
 export async function verifyAdminPassword(password: string, adminPasswordHash: string): Promise<boolean> {

@@ -27,7 +27,7 @@ async function hashPassword(password: string): Promise<string> {
     {
       name: 'PBKDF2',
       salt: salt,
-      iterations: 100000,
+      iterations: 600000,
       hash: 'SHA-256'
     },
     baseKey,
@@ -37,7 +37,7 @@ async function hashPassword(password: string): Promise<string> {
   const saltString = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
   const hashString = Array.from(new Uint8Array(derivedBits)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-  return `${saltString}:${hashString}`;
+  return `600000:${saltString}:${hashString}`;
 }
 
 const args = process.argv.slice(2);

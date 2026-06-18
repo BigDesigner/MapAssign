@@ -4,7 +4,7 @@ import { isRateLimited } from './rateLimit';
 import { isValidCountryCode, isValidColorHex, sanitizeInput, isValidRepresentativeCode, isValidPassword } from './validation';
 import { enqueueJob, processQueue } from './queue';
 
-const DUMMY_HASH = '73616c7473616c7473616c7473616c74:6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f66';
+const DUMMY_HASH = '600000:73616c7473616c7473616c7473616c74:6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f6f66';
 
 export interface Env {
   DB: D1Database;
@@ -151,6 +151,10 @@ export default {
 
         if (!usernameOrCode || !password) {
           return jsonResponse({ error: 'Credentials required.' }, 400, headers);
+        }
+
+        if (typeof usernameOrCode !== 'string' || typeof password !== 'string' || usernameOrCode.length > 100 || password.length > 100) {
+          return jsonResponse({ error: 'Geçersiz girdi formatı veya uzunluğu.' }, 400, headers);
         }
 
         // Verify Turnstile Token
@@ -318,6 +322,10 @@ export default {
 
         if (!oldPassword || !newPassword) {
           return jsonResponse({ error: 'Old and new passwords are required.' }, 400, headers);
+        }
+
+        if (typeof oldPassword !== 'string' || typeof newPassword !== 'string' || oldPassword.length > 100 || newPassword.length > 100) {
+          return jsonResponse({ error: 'Geçersiz şifre formatı veya uzunluğu.' }, 400, headers);
         }
 
         if (!isValidPassword(newPassword)) {

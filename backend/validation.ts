@@ -12,7 +12,7 @@ export function isValidRepresentativeCode(code: string): boolean {
 }
 
 export function isValidPassword(password: string): boolean {
-  return password.length >= 8;
+  return typeof password === 'string' && password.length >= 8 && password.length <= 100;
 }
 
 export function sanitizeInput(str: string): string {
