@@ -1,18 +1,14 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "session_id": "c8fa8f1e-2d64-4c6d-b298-78b739093810",
   "status": "ACTIVE",
   "mode": "Interactive",
-  "timestamp": "2026-07-23T22:19:14+03:00",
+  "preferred_language": "tr",
+  "timestamp": "2026-07-23T23:01:20+03:00",
   "active_branch": "main",
-  "last_commit": "2d12fdb",
+  "last_commit": "4aae849",
   "git_history_available": true,
   "worktree_status": "clean",
-  "concurrency_lock": {
-    "is_locked": false,
-    "locked_by": null,
-    "lock_acquired_at": null
-  },
   "current_sprint": {
     "sprint_id": "v0.1.0-alpha",
     "active_tasks": []
