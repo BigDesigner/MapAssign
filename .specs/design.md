@@ -8,7 +8,7 @@ Tüm renkler ve tema değişkenleri tek bir noktada (`:root`) tanımlanmıştır
 :root {
   /* Base Theme Colors */
   --color-bg-page: #f8fafc;              /* Ana sayfa arka planı (Kirli Beyaz) */
-  --color-bg-ocean: #cbd5e1;             /* Harita deniz/okyanus arka planı (Koyu Gri) */
+  --color-bg-ocean: #e0f2fe;             /* Harita deniz/okyanus arka planı (Açık Pastel Mavi) */
   --color-bg-sidebar: rgba(255, 255, 255, 0.95); /* Yan menü arka planı */
   --color-bg-panel: #f8fafc;            /* Kartlar & Paneller */
   --color-bg-card: #ffffff;             /* Beyaz Kartlar & Modal'lar */
