@@ -19,6 +19,10 @@
 
 ## Known Failures / Unconfirmed Facts
 - The Google Drive Service Account JSON integration logic is yet to be fully implemented inside `backend/queue.ts`.
+- **MUST REMIND USER BEFORE GOOGLE DRIVE CODING:**
+  1. Confirm `GDRIVE_ROOT_FOLDER_ID`.
+  2. Confirm `GDRIVE_SERVICE_ACCOUNT_JSON` secret setup.
+  3. Confirm customer fields & `_Archive` folder behavior.
 
 ## Suggested Validation Commands
 - `npm run backend:dev`

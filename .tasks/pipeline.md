@@ -20,8 +20,12 @@ A comprehensive security audit has been completed, mitigating all identified pen
 - Role-based UI constraints.
 - Connect "Add Customer" panel to `create_customer_folders` queue.
 
-## Blockers
-None currently detected.
+## Blockers & Pending Clarifications
+- **Google Drive Integration Reminders (Must Confirm Before Coding):**
+  1. `GDRIVE_ROOT_FOLDER_ID`: Confirm root folder ID on Google Drive.
+  2. `GDRIVE_SERVICE_ACCOUNT_JSON`: Obtain/set service account JSON via `wrangler secret put`.
+  3. Müşteri veri alanları (Şirket Adı, Yetkili, Telefon, E-posta, Adres, Ülke, Temsilci, Drive Linki).
+  4. Müşteri silme/arşivleme davranışında Drive klasörünün `_Archive` klasörüne taşınması.
 
 ## Suggested Validation Plan
 - Ensure `npm run backend:dev` spins up without typing errors.
