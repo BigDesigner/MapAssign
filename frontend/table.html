@@ -10,19 +10,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0f19;
-      --surface: rgba(17, 24, 39, 0.85);
-      --surface-solid: #111827;
-      --border: rgba(255,255,255,0.08);
-      --border-hover: rgba(255,255,255,0.16);
-      --text: #f3f4f6;
-      --text-muted: #9ca3af;
-      --accent: #3b82f6;
-      --accent-hover: #2563eb;
+      --bg: #f8fafc;
+      --surface: rgba(255, 255, 255, 0.95);
+      --surface-solid: #ffffff;
+      --border: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0f172a;
+      --accent-hover: #1e293b;
       --success: #10b981;
       --danger: #ef4444;
-      --row-hover: rgba(59,130,246,0.06);
-      --row-alt: rgba(255,255,255,0.015);
+      --row-hover: rgba(15, 23, 42, 0.04);
+      --row-alt: #f8fafc;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
@@ -41,7 +41,7 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background: rgba(11,15,25,0.92);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--border);
@@ -66,35 +66,32 @@
       align-items: center;
       gap: 6px;
       padding: 8px 14px;
-      background: rgba(255,255,255,0.05);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 10px;
-      color: var(--text-muted);
+      color: var(--text);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    #back-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); border-color: var(--border-hover); }
+    #back-btn:hover { background: #f1f5f9; color: var(--text); border-color: var(--border-hover); }
 
     header h1 {
       font-size: 18px;
       font-weight: 800;
-      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--text);
     }
 
     #role-badge {
       padding: 4px 10px;
-      background: rgba(59,130,246,0.15);
-      border: 1px solid rgba(59,130,246,0.3);
+      background: rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(15, 23, 42, 0.2);
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
-      color: #93c5fd;
+      color: var(--text);
       letter-spacing: 0.05em;
     }
 
