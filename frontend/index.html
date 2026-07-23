@@ -10,13 +10,13 @@
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     :root {
-      --bg-color: #0b0f19;
-      --panel-bg: rgba(17, 24, 39, 0.85);
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --text-color: #f3f4f6;
-      --text-muted: #9ca3af;
-      --accent-color: #3b82f6;
-      --accent-hover: #2563eb;
+      --bg-color: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.92);
+      --panel-border: rgba(226, 232, 240, 0.9);
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --accent-color: #0f172a;
+      --accent-hover: #1e293b;
       --danger-color: #ef4444;
       --success-color: #10b981;
     }
@@ -46,7 +46,7 @@
       overflow: hidden;
     }
 
-    /* Map Container - Expands to fill available space */
+    /* Map Container */
     #map-container {
       flex: 1;
       width: 100%;
@@ -55,6 +55,7 @@
       overflow: hidden;
       cursor: grab;
       touch-action: none;
+      background-color: #f1f5f9;
     }
 
     #map-container:active {
@@ -67,16 +68,16 @@
       display: block;
     }
 
-    /* Country path styling */
+    /* Country path styling - Crisp Corporate Light Mode */
     path {
-      fill: #1e293b;
-      stroke: #334155;
-      stroke-width: 0.08px;
+      fill: #ffffff;
+      stroke: #cbd5e1;
+      stroke-width: 0.15px;
       transition: fill 0.25s ease, stroke 0.25s ease;
     }
 
     #World, #Ocean {
-      fill: transparent !important;
+      fill: #f1f5f9 !important;
       stroke: none !important;
     }
 
@@ -85,8 +86,8 @@
     }
 
     .admin-mode g:hover path {
-      fill: #475569;
-      stroke: #64748b;
+      fill: #e2e8f0;
+      stroke: #94a3b8;
     }
 
     /* Floating Menu Toggle Button (Top-Left) */
@@ -97,37 +98,37 @@
       z-index: 1100;
       width: 38px;
       height: 38px;
-      background: rgba(17, 24, 39, 0.9);
+      background: #ffffff;
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
+      border: 1px solid #cbd5e1;
       border-radius: 10px;
-      color: var(--text-color);
+      color: #0f172a;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
     
     .menu-toggle-btn:hover {
-      background: rgba(30, 41, 59, 1);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: #f1f5f9;
+      border-color: #94a3b8;
     }
 
     #right-menu-toggle {
-      display: none !important; /* Integrated search into main sidebar */
+      display: none !important;
     }
 
-    /* UNIFIED SIDEBAR LAYOUT */
+    /* UNIFIED SIDEBAR LAYOUT - Light Corporate Style */
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
       width: 320px;
       height: 100vh;
-      background: rgba(11, 15, 25, 0.95);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
       border-right: 1px solid var(--panel-border);
@@ -137,10 +138,10 @@
       gap: 14px;
       overflow-y: auto;
       z-index: 1000;
-      box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+      box-shadow: 10px 0 30px rgba(15, 23, 42, 0.06);
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       scrollbar-width: thin;
-      scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+      scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
     }
 
     .sidebar.hidden-panel {
@@ -154,7 +155,7 @@
       background: transparent;
     }
     .sidebar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.15);
       border-radius: 2px;
     }
 
@@ -166,7 +167,7 @@
       right: auto !important;
       bottom: auto !important;
       width: 100% !important;
-      background: rgba(30, 41, 59, 0.6);
+      background: #f8fafc;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--panel-border);
@@ -203,11 +204,11 @@
       text-transform: uppercase;
     }
 
-    select, input, button {
+    select, input {
       width: 100%;
       padding: 9px 12px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid var(--panel-border);
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
       color: var(--text-color);
       font-size: 13px;
@@ -217,18 +218,24 @@
 
     select:focus, input:focus {
       border-color: var(--accent-color);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
     }
 
     button {
+      width: 100%;
+      padding: 9px 12px;
       background: var(--accent-color);
       border: none;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
+      transition: background 0.2s ease;
     }
 
     button:hover {
@@ -236,19 +243,20 @@
     }
 
     button.secondary {
-      background: transparent;
-      border: 1px solid var(--panel-border);
+      background: #ffffff;
+      color: var(--text-color);
+      border: 1px solid #cbd5e1;
     }
 
     button.secondary:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: #f1f5f9;
     }
 
     /* Assign Country Popup inside Sidebar */
     #assign-panel {
       display: none;
       border: 1px solid var(--accent-color);
-      background: rgba(30, 41, 59, 0.9);
+      background: #ffffff;
     }
     #assign-panel.active {
       display: block;
@@ -277,13 +285,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid var(--panel-border);
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
       box-shadow: none;
     }
 
     .action-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: #f1f5f9;
     }
 
     /* Map Legend Container inside Sidebar */
@@ -294,7 +303,7 @@
       transform: none;
       width: 100%;
       max-width: none;
-      background: rgba(30, 41, 59, 0.5);
+      background: #f8fafc;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--panel-border);
@@ -328,7 +337,7 @@
       height: 8px;
       border-radius: 50%;
       display: inline-block;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(0, 0, 0, 0.15);
     }
 
     /* Color Picker Styles */
@@ -348,23 +357,23 @@
       border-radius: 50%;
       cursor: pointer;
       position: relative;
-      border: 2px solid rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(0, 0, 0, 0.1);
       transition: transform 0.2s, border-color 0.2s;
     }
     .preset-dot:hover {
       transform: scale(1.1);
-      border-color: rgba(255, 255, 255, 0.4);
+      border-color: rgba(0, 0, 0, 0.3);
     }
     .preset-dot.selected {
-      border-color: #ffffff;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+      border-color: #0f172a;
+      box-shadow: 0 0 8px rgba(15, 23, 42, 0.2);
     }
     .preset-dot.selected::after {
       content: '';
       position: absolute;
       width: 4px;
       height: 4px;
-      background: #ffffff;
+      background: #0f172a;
       border-radius: 50%;
       top: 50%;
       left: 50%;
@@ -374,7 +383,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(15, 23, 42, 0.6);
+      background: #ffffff;
       border: 1px solid var(--panel-border);
       border-radius: 8px;
       padding: 2px 10px;
@@ -402,7 +411,7 @@
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(0, 0, 0, 0.15);
       background: #3b82f6;
       flex-shrink: 0;
     }
@@ -414,7 +423,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(4, 6, 11, 0.85);
+      background: rgba(15, 23, 42, 0.4);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       display: none;
@@ -428,12 +437,12 @@
       opacity: 1;
     }
     .confirm-modal-box {
-      background: rgba(17, 24, 39, 0.95);
-      border: 1px solid var(--panel-border);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 24px;
       width: 320px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
       transform: scale(0.9);
       transition: transform 0.2s ease;
       text-align: center;
@@ -481,7 +490,7 @@
       color: var(--text-color);
     }
     #map-search-suggestions-list li:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.05);
     }
     .suggestion-badge {
       font-size: 11px;
@@ -495,17 +504,17 @@
       height: 6px;
       border-radius: 50%;
       display: inline-block;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(0,0,0,0.1);
     }
 
-    /* Login Screen */
+    /* Login Screen - Light Corporate Theme */
     #login-screen {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: #060913;
+      background: #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -514,15 +523,15 @@
     }
 
     .login-card {
-      background: var(--panel-bg);
+      background: #ffffff;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--panel-border);
+      border: 1px solid #e2e8f0;
       padding: 32px;
       border-radius: 24px;
       width: 100%;
       max-width: 400px;
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
     }
 
     .login-header {
@@ -535,9 +544,7 @@
       font-weight: 800;
       letter-spacing: -0.025em;
       margin-bottom: 8px;
-      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: #0f172a;
     }
 
     .login-header p {
@@ -579,8 +586,8 @@
           <button type="submit">Giriş Yap</button>
         </form>
       </div>
-      <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 11px; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.25); font-weight: 500; font-family: 'Outfit', sans-serif;">
-        Design & Development: <span style="color: rgba(255, 255, 255, 0.45); font-weight: 700;">GNNlabs</span>
+      <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 11px; letter-spacing: 0.05em; color: #94a3b8; font-weight: 500; font-family: 'Outfit', sans-serif;">
+        Design & Development: <span style="color: #475569; font-weight: 700;">GNNlabs</span>
       </div>
     </div>
 
@@ -626,13 +633,13 @@
       <div id="control-panel" class="overlay-panel" style="display: none;">
         <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 12px;">
           <h3 id="role-title" style="font-size: 15px; font-weight: 800; margin: 0;">Yönetici Modu</h3>
-          <span id="user-display" class="user-badge" style="display: inline-block; max-width: 240px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 11px; padding: 2px 8px; background: rgba(59, 130, 246, 0.15); color: var(--accent-color); border-radius: 20px; font-weight: 600; letter-spacing: 0.05em;">admin</span>
+          <span id="user-display" class="user-badge" style="display: inline-block; max-width: 240px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 11px; padding: 2px 8px; background: rgba(15, 23, 42, 0.08); color: var(--accent-color); border-radius: 20px; font-weight: 600; letter-spacing: 0.05em;">admin</span>
         </div>
         
         <!-- Admin Controls -->
         <div id="admin-controls" style="display: none;">
           <div class="form-group">
-            <button id="manage-reps-btn" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--panel-border); color: var(--text-color);">Temsilcileri Yönet</button>
+            <button id="manage-reps-btn" class="secondary">Temsilcileri Yönet</button>
           </div>
         </div>
 
@@ -651,13 +658,13 @@
                 <label for="new-pass">Yeni Şifre</label>
                 <input type="password" id="new-pass" required placeholder="••••••••">
               </div>
-              <button type="submit" style="background: var(--accent-color);">Şifreyi Güncelle</button>
+              <button type="submit">Şifreyi Güncelle</button>
             </form>
           </div>
         </div>
 
         <div class="form-group">
-          <button id="logout-btn" class="secondary" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.2);">Çıkış Yap</button>
+          <button id="logout-btn" class="secondary" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3);">Çıkış Yap</button>
         </div>
       </div>
 
