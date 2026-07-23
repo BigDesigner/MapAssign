@@ -10,26 +10,53 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f8fafc;
-      --surface: rgba(255, 255, 255, 0.95);
-      --surface-solid: #ffffff;
-      --border: #e2e8f0;
-      --border-hover: #cbd5e1;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --accent: #0f172a;
-      --accent-hover: #1e293b;
-      --success: #10b981;
-      --danger: #ef4444;
-      --row-hover: rgba(15, 23, 42, 0.04);
-      --row-alt: #f8fafc;
+      /* Base Theme Colors */
+      --color-bg-page: #f8fafc;
+      --color-bg-ocean: #cbd5e1;
+      --color-bg-sidebar: rgba(255, 255, 255, 0.95);
+      --color-bg-panel: #f8fafc;
+      --color-bg-card: #ffffff;
+      --color-bg-input: #ffffff;
+      
+      /* Country & Map Colors */
+      --color-map-country-fill: #fefcf6;
+      --color-map-country-stroke: #94a3b8;
+      --color-map-country-hover-fill: #e2e8f0;
+      --color-map-country-hover-stroke: #64748b;
+
+      /* Borders */
+      --color-border-subtle: #e2e8f0;
+      --color-border-input: #cbd5e1;
+      --color-border-hover: #94a3b8;
+
+      /* Typography & Icons */
+      --color-text-main: #0f172a;
+      --color-text-muted: #64748b;
+      --color-text-inverse: #ffffff;
+
+      /* Primary Actions */
+      --color-accent-main: #0f172a;
+      --color-accent-hover: #1e293b;
+      --color-accent-text: #ffffff;
+
+      /* Badges & Tables */
+      --color-badge-bg: #f1f5f9;
+      --color-badge-border: #cbd5e1;
+      --color-badge-text: #0f172a;
+      --color-row-alt: #f8fafc;
+      --color-row-hover: #f1f5f9;
+
+      /* Status Colors */
+      --color-danger: #ef4444;
+      --color-danger-hover: #dc2626;
+      --color-success: #10b981;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
 
     body {
-      background: var(--bg);
-      color: var(--text);
+      background: var(--color-bg-page);
+      color: var(--color-text-main);
       height: 100vh;
       overflow: hidden;
       display: flex;
@@ -41,10 +68,10 @@
       position: sticky;
       top: 0;
       z-index: 50;
-      background: rgba(255, 255, 255, 0.92);
+      background: var(--color-bg-sidebar);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--color-border-subtle);
       padding: 0 24px;
       height: 60px;
       display: flex;
@@ -66,22 +93,22 @@
       align-items: center;
       gap: 6px;
       padding: 8px 14px;
-      background: #ffffff;
-      border: 1px solid var(--border);
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-input);
       border-radius: 10px;
-      color: var(--text);
+      color: var(--color-text-main);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    #back-btn:hover { background: #f1f5f9; color: var(--text); border-color: var(--border-hover); }
+    #back-btn:hover { background: var(--color-row-hover); color: var(--color-text-main); border-color: var(--color-border-hover); }
 
     header h1 {
       font-size: 18px;
       font-weight: 800;
-      color: var(--text);
+      color: var(--color-text-main);
     }
 
     #role-badge {
@@ -91,7 +118,7 @@
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
-      color: var(--text);
+      color: var(--color-text-main);
       letter-spacing: 0.05em;
     }
 
@@ -102,8 +129,8 @@
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
-      border-bottom: 1px solid var(--border);
-      background: #ffffff;
+      border-bottom: 1px solid var(--color-border-subtle);
+      background: var(--color-bg-card);
       flex-shrink: 0;
     }
 
@@ -120,37 +147,37 @@
       transform: translateY(-50%);
       width: 16px;
       height: 16px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       pointer-events: none;
     }
 
     #search-input {
       width: 100%;
       padding: 10px 14px 10px 38px;
-      background: #ffffff;
-      border: 1px solid var(--border);
+      background: var(--color-bg-input);
+      border: 1px solid var(--color-border-input);
       border-radius: 10px;
-      color: var(--text);
+      color: var(--color-text-main);
       font-size: 14px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
-    #search-input::placeholder { color: var(--text-muted); }
+    #search-input:focus { border-color: var(--color-accent-main); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
+    #search-input::placeholder { color: var(--color-text-muted); }
 
     #rep-filter {
       width: 100%;
       padding: 10px 14px;
-      background: #ffffff;
-      border: 1px solid var(--border);
+      background: var(--color-bg-input);
+      border: 1px solid var(--color-border-input);
       border-radius: 10px;
-      color: var(--text);
+      color: var(--color-text-main);
       font-size: 14px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
-    #rep-filter:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
+    #rep-filter:focus { border-color: var(--color-accent-main); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
 
     .toolbar-right {
       display: flex;
@@ -160,7 +187,7 @@
 
     #row-count {
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       white-space: nowrap;
     }
 
@@ -169,17 +196,17 @@
       align-items: center;
       gap: 8px;
       padding: 10px 18px;
-      background: var(--accent);
+      background: var(--color-accent-main);
       border: none;
       border-radius: 10px;
-      color: white;
+      color: var(--color-accent-text);
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.15s, transform 0.1s;
       white-space: nowrap;
     }
-    #csv-btn:hover { background: #1e293b; }
+    #csv-btn:hover { background: var(--color-accent-hover); }
     #csv-btn:active { transform: scale(0.97); }
     #csv-btn svg { width: 16px; height: 16px; }
 
@@ -202,9 +229,9 @@
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.07em;
-      color: var(--text-muted);
-      background: #f8fafc;
-      border-bottom: 2px solid var(--border);
+      color: var(--color-text-muted);
+      background: var(--color-bg-panel);
+      border-bottom: 2px solid var(--color-border-subtle);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -213,27 +240,27 @@
       white-space: nowrap;
       transition: color 0.15s;
     }
-    thead th:hover { color: var(--text); }
-    thead th.sort-asc::after { content: ' ▲'; color: var(--accent); font-size: 9px; }
-    thead th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: 9px; }
+    thead th:hover { color: var(--color-text-main); }
+    thead th.sort-asc::after { content: ' ▲'; color: var(--color-accent-main); font-size: 9px; }
+    thead th.sort-desc::after { content: ' ▼'; color: var(--color-accent-main); font-size: 9px; }
 
     thead th:first-child { border-radius: 10px 0 0 0; width: 60px; text-align: center; }
     thead th:last-child  { border-radius: 0 10px 0 0; }
 
     tbody tr {
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--color-border-subtle);
       transition: background 0.12s;
     }
-    tbody tr:nth-child(even) { background: #ffffff; }
-    tbody tr:nth-child(odd) { background: #f8fafc; }
-    tbody tr:hover { background: #f1f5f9; }
+    tbody tr:nth-child(even) { background: var(--color-bg-card); }
+    tbody tr:nth-child(odd) { background: var(--color-row-alt); }
+    tbody tr:hover { background: var(--color-row-hover); }
 
     td {
       padding: 12px 16px;
       font-size: 14px;
       vertical-align: middle;
     }
-    td:first-child { text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; }
+    td:first-child { text-align: center; color: var(--color-text-muted); font-size: 12px; font-weight: 600; }
 
     .rep-name-cell {
       display: flex;
@@ -253,13 +280,13 @@
     .country-code-badge {
       display: inline-block;
       padding: 3px 8px;
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      background: var(--color-badge-bg);
+      border: 1px solid var(--color-badge-border);
       border-radius: 6px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.05em;
-      color: #0f172a;
+      color: var(--color-badge-text);
       font-family: 'Courier New', monospace;
     }
 
@@ -271,7 +298,7 @@
       justify-content: center;
       gap: 16px;
       padding: 80px 24px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       font-size: 15px;
     }
     #loading-state.visible, #empty-state.visible, #auth-state.visible { display: flex; }
@@ -287,8 +314,8 @@
     .spinner {
       width: 36px;
       height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
+      border: 3px solid var(--color-border-subtle);
+      border-top-color: var(--color-accent-main);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -299,81 +326,66 @@
       header h1 { font-size: 15px; }
       .toolbar { padding: 12px 14px; }
       .table-wrap { padding: 12px; }
-      td, thead th { padding: 10px 12px; }
     }
   </style>
 </head>
 <body>
-
-  <!-- Header -->
   <header>
     <div class="header-left">
-      <a id="back-btn" href="/">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-        </svg>
+      <a href="/" id="back-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
         Haritaya Dön
       </a>
       <h1>Atama Tablosu</h1>
-      <span id="role-badge">—</span>
+      <span id="role-badge">YÜKLENİYOR...</span>
     </div>
-    <button id="csv-btn">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-      </svg>
-      CSV Olarak İndir
-    </button>
+    <div style="font-size: 11px; color: var(--color-text-muted); font-weight: 500;">
+      GNNlabs
+    </div>
   </header>
 
-  <!-- Toolbar -->
-  <div class="toolbar" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-    <div class="search-wrap" style="flex: 2; min-width: 200px;">
-      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
-      </svg>
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/></svg>
       <input type="text" id="search-input" placeholder="Temsilci veya ülke ara...">
     </div>
-    <div class="filter-wrap" style="flex: 1; min-width: 160px;">
+    <div style="min-width: 180px;">
       <select id="rep-filter">
-        <option value="">Tüm Temsilciler</option>
+        <option value="ALL">Tüm Temsilciler</option>
       </select>
     </div>
-    <div class="toolbar-right" style="flex-shrink: 0; margin-left: auto;">
-      <span id="row-count">—</span>
+    <div class="toolbar-right">
+      <span id="row-count">0 kayıt</span>
+      <button id="csv-btn">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        CSV Olarak İndir
+      </button>
     </div>
   </div>
 
-  <!-- Auth error state -->
-  <div id="auth-state">
-    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
-    </svg>
-    <p>Oturum bulunamadı. Lütfen <a href="/" style="color:var(--accent)">giriş yapın</a>.</p>
-  </div>
-
-  <!-- Loading state -->
   <div id="loading-state" class="visible">
     <div class="spinner"></div>
-    <p>Veriler yükleniyor...</p>
+    <span>Veriler yükleniyor...</span>
   </div>
 
-  <!-- Empty state -->
+  <div id="auth-state">
+    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+    <span>Bu sayfayı görüntülemek için giriş yapmalısınız. <a href="/" style="color: var(--color-accent-main); text-decoration: underline;">Giriş Yap</a></span>
+  </div>
+
   <div id="empty-state">
-    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"/>
-    </svg>
-    <p>Arama kriterlerine uygun kayıt bulunamadı.</p>
+    <svg class="state-icon" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+    <span>Arama kriterlerine uygun atama bulunamadı.</span>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrap" id="table-wrap" style="display:none;">
-    <table id="data-table">
+  <div class="table-wrap">
+    <table id="data-table" style="display:none;">
       <thead>
         <tr>
-          <th data-col="no">No</th>
-          <th data-col="rep" class="sort-asc">Temsilci Adı</th>
-          <th data-col="code">Ülke Kodu</th>
-          <th data-col="name">Ülke Adı</th>
+          <th style="width: 50px;">No</th>
+          <th data-sort="rep_name">Temsilci Adı</th>
+          <th data-sort="country_code" style="width: 100px;">Ülke Kodu</th>
+          <th data-sort="country_name">Ülke Adı</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -381,10 +393,9 @@
   </div>
 
   <script type="module">
-    import { COUNTRY_NAMES } from './src/countryNames.ts';
-
-    const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-      ? '' : 'https://map-api.akansu.com';
+    import { COUNTRY_NAMES } from '/src/countryNames.ts';
+    
+    const API_BASE = '';
 
     function apiFetch(path, init = {}) {
       init.credentials = 'include';
@@ -412,20 +423,20 @@
     }
 
     // ── State ──
-    let allRows = [];      // { no, rep, code, name, color }
+    let allRows = [];
     let filtered = [];
     let sortCol = 'rep';
-    let sortDir = 1;       // 1 = asc, -1 = desc
+    let sortDir = 1;
     let role = null;
 
     // ── DOM refs ──
     const tbody         = document.getElementById('table-body');
+    const dataTable     = document.getElementById('data-table');
     const searchInput   = document.getElementById('search-input');
     const rowCount      = document.getElementById('row-count');
     const loadingState  = document.getElementById('loading-state');
     const emptyState    = document.getElementById('empty-state');
     const authState     = document.getElementById('auth-state');
-    const tableWrap     = document.getElementById('table-wrap');
     const csvBtn        = document.getElementById('csv-btn');
     const roleBadge     = document.getElementById('role-badge');
     const repFilter     = document.getElementById('rep-filter');
@@ -434,39 +445,27 @@
       loadingState.classList.toggle('visible', which === 'loading');
       emptyState.classList.toggle('visible', which === 'empty');
       authState.classList.toggle('visible', which === 'auth');
-      tableWrap.style.display = which === 'table' ? 'block' : 'none';
+      if (dataTable) dataTable.style.display = which === 'table' ? 'table' : 'none';
     }
 
     // ── Fetch data ──
     async function loadData() {
       showState('loading');
       try {
-        // Fetch current user details to check authentication and role
         const meRes = await apiFetch('/api/auth/me');
-        if (meRes.status === 401) {
-          showState('auth');
-          return;
-        }
-        if (!meRes.ok) {
+        if (meRes.status === 401 || !meRes.ok) {
           showState('auth');
           return;
         }
         const meData = await meRes.json();
-        role = meData.role; // 'admin' or 'representative'
+        role = meData.role;
 
         if (role === 'admin') {
           roleBadge.textContent = 'YÖNETİCİ';
-          roleBadge.style.color = '#38bdf8'; // sky-400
-          roleBadge.style.borderColor = 'rgba(56,189,248,0.3)';
-          roleBadge.style.background = 'rgba(56,189,248,0.1)';
         } else {
           roleBadge.textContent = 'TEMSİLCİ';
-          roleBadge.style.color = '#a3e635'; // lime-400
-          roleBadge.style.borderColor = 'rgba(163,230,53,0.3)';
-          roleBadge.style.background = 'rgba(163,230,53,0.1)';
         }
 
-        // Fetch all assignments for map state (accessible to both roles now)
         const res = await apiFetch('/api/map/state');
         if (!res.ok) {
           showState('auth');
@@ -475,7 +474,6 @@
         const data = await res.json();
         const assignments = data.assignments || [];
         
-        // Group by rep name then sort using Turkish localeCompare
         const sorted = [...assignments].sort((a, b) =>
           String(a.name).localeCompare(String(b.name), 'tr') ||
           String(COUNTRY_NAMES[a.country_code] || a.country_code).localeCompare(
@@ -497,7 +495,6 @@
       applyFilter();
     }
 
-    // ── Filter ──
     function populateRepFilter() {
       const reps = [...new Set(allRows.map(r => r.rep))].sort((a, b) => a.localeCompare(b, 'tr'));
       const currentVal = repFilter.value;
@@ -524,7 +521,6 @@
       applySort();
     }
 
-    // ── Sort ──
     function applySort() {
       filtered.sort((a, b) => {
         const va = sortCol === 'no' ? a.no : String(a[sortCol]);
@@ -535,16 +531,11 @@
       renderTable();
     }
 
-    // ── Render ──
     function renderTable() {
       rowCount.textContent = `${filtered.length} kayıt`;
 
       if (!filtered.length) {
-        if (allRows.length === 0) {
-          showState('empty');
-        } else {
-          showState('empty');
-        }
+        showState('empty');
         return;
       }
 
@@ -571,7 +562,6 @@
         .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
-    // ── CSV Export ──
     csvBtn.addEventListener('click', () => {
       if (!filtered.length) return;
       const header = ['No', 'Temsilci Adı', 'Ülke Kodu', 'Ülke Adı'];
@@ -591,14 +581,12 @@
       URL.revokeObjectURL(url);
     });
 
-    // ── Search & Filter ──
     searchInput.addEventListener('input', applyFilter);
     repFilter.addEventListener('change', applyFilter);
 
-    // ── Sort header clicks ──
-    document.querySelectorAll('thead th[data-col]').forEach(th => {
+    document.querySelectorAll('thead th[data-sort]').forEach(th => {
       th.addEventListener('click', () => {
-        const col = th.dataset.col;
+        const col = th.dataset.sort;
         if (sortCol === col) {
           sortDir *= -1;
         } else {
@@ -613,7 +601,6 @@
       });
     });
 
-    // ── Init ──
     loadData();
   </script>
 </body>
