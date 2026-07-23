@@ -103,7 +103,7 @@
       gap: 12px;
       flex-wrap: wrap;
       border-bottom: 1px solid var(--border);
-      background: rgba(17,24,39,0.4);
+      background: #ffffff;
       flex-shrink: 0;
     }
 
@@ -127,7 +127,7 @@
     #search-input {
       width: 100%;
       padding: 10px 14px 10px 38px;
-      background: var(--surface-solid);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
@@ -135,13 +135,13 @@
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    #search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
     #search-input::placeholder { color: var(--text-muted); }
 
     #rep-filter {
       width: 100%;
       padding: 10px 14px;
-      background: var(--surface-solid);
+      background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 10px;
       color: var(--text);
@@ -150,7 +150,7 @@
       transition: border-color 0.2s, box-shadow 0.2s;
       cursor: pointer;
     }
-    #rep-filter:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    #rep-filter:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(15,23,42,0.1); }
 
     .toolbar-right {
       display: flex;
@@ -169,7 +169,7 @@
       align-items: center;
       gap: 8px;
       padding: 10px 18px;
-      background: var(--success);
+      background: var(--accent);
       border: none;
       border-radius: 10px;
       color: white;
@@ -179,7 +179,7 @@
       transition: background 0.15s, transform 0.1s;
       white-space: nowrap;
     }
-    #csv-btn:hover { background: #059669; }
+    #csv-btn:hover { background: #1e293b; }
     #csv-btn:active { transform: scale(0.97); }
     #csv-btn svg { width: 16px; height: 16px; }
 
@@ -203,8 +203,8 @@
       font-weight: 700;
       letter-spacing: 0.07em;
       color: var(--text-muted);
-      background: var(--surface-solid);
-      border-bottom: 1px solid var(--border);
+      background: #f8fafc;
+      border-bottom: 2px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -224,8 +224,9 @@
       border-bottom: 1px solid var(--border);
       transition: background 0.12s;
     }
-    tbody tr:nth-child(even) { background: var(--row-alt); }
-    tbody tr:hover { background: var(--row-hover); }
+    tbody tr:nth-child(even) { background: #ffffff; }
+    tbody tr:nth-child(odd) { background: #f8fafc; }
+    tbody tr:hover { background: #f1f5f9; }
 
     td {
       padding: 12px 16px;
@@ -245,20 +246,20 @@
       height: 12px;
       border-radius: 50%;
       flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 1px solid rgba(0,0,0,0.15);
       box-shadow: 0 0 6px var(--dot-color, transparent);
     }
 
     .country-code-badge {
       display: inline-block;
       padding: 3px 8px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid var(--border);
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.05em;
-      color: var(--text-muted);
+      color: #0f172a;
       font-family: 'Courier New', monospace;
     }
 

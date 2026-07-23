@@ -8,17 +8,17 @@ Tüm renkler ve tema değişkenleri tek bir noktada (`:root`) tanımlanmıştır
 :root {
   /* Base Theme Colors */
   --color-bg-page: #f8fafc;              /* Ana sayfa arka planı (Kirli Beyaz) */
-  --color-bg-ocean: #f1f5f9;             /* Harita deniz/okyanus arka planı (Açık Gri) */
+  --color-bg-ocean: #cbd5e1;             /* Harita deniz/okyanus arka planı (Koyu Gri) */
   --color-bg-sidebar: rgba(255, 255, 255, 0.95); /* Yan menü arka planı */
   --color-bg-panel: #f8fafc;            /* Kartlar & Paneller */
   --color-bg-card: #ffffff;             /* Beyaz Kartlar & Modal'lar */
   --color-bg-input: #ffffff;            /* İnput & Select arka planı */
   
   /* Country & Map Colors */
-  --color-map-country-fill: #ffffff;     /* Atanmamış Ülkeler (Saf Beyaz) */
-  --color-map-country-stroke: #cbd5e1;   /* Ülke Çerçeve Çizgileri */
+  --color-map-country-fill: #fefcf6;     /* Atanmamış Ülkeler (Sıcak Krem Rengi) */
+  --color-map-country-stroke: #94a3b8;   /* Ülke Çerçeve Çizgileri */
   --color-map-country-hover-fill: #e2e8f0; /* Hover Ülke Rengi */
-  --color-map-country-hover-stroke: #94a3b8;
+  --color-map-country-hover-stroke: #64748b;
 
   /* Borders */
   --color-border-subtle: rgba(226, 232, 240, 0.9);
