@@ -49,7 +49,7 @@ export const COUNTRY_NAMES: Record<string, string> = {
   um: "Amerika Birleşik Devletleri Küçük Dış Adaları", us: "Amerika Birleşik Devletleri", uy: "Uruguay", uz: "Özbekistan", vu: "Vanuatu",
   ve: "Venezuela", vn: "Vietnam", vg: "Britanya Virjin Adaları", vi: "ABD Virjin Adaları", wf: "Wallis ve Futuna",
   eh: "Batı Sahra", ye: "Yemen", zm: "Zambia", zw: "Zimbabwe",
-  xs: "Somaliland",
+  xs: "Somaliland", xq: "Kırım",
   xk: "Kosova",
   xc: "Kuzey Kıbrıs",
   "gb-eng": "İngiltere",
