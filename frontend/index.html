@@ -10,15 +10,50 @@
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     :root {
-      --bg-color: #f8fafc;
-      --panel-bg: rgba(255, 255, 255, 0.92);
-      --panel-border: rgba(226, 232, 240, 0.9);
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --accent-color: #0f172a;
-      --accent-hover: #1e293b;
-      --danger-color: #ef4444;
-      --success-color: #10b981;
+      /* Base Theme Colors */
+      --color-bg-page: #f8fafc;
+      --color-bg-ocean: #f1f5f9;
+      --color-bg-sidebar: rgba(255, 255, 255, 0.95);
+      --color-bg-panel: #f8fafc;
+      --color-bg-card: #ffffff;
+      --color-bg-input: #ffffff;
+      
+      /* Country & Map Colors */
+      --color-map-country-fill: #ffffff;
+      --color-map-country-stroke: #cbd5e1;
+      --color-map-country-hover-fill: #e2e8f0;
+      --color-map-country-hover-stroke: #94a3b8;
+
+      /* Borders */
+      --color-border-subtle: rgba(226, 232, 240, 0.9);
+      --color-border-input: #cbd5e1;
+      --color-border-hover: #94a3b8;
+
+      /* Typography & Icons */
+      --color-text-main: #0f172a;
+      --color-text-muted: #64748b;
+      --color-text-inverse: #ffffff;
+
+      /* Primary Actions (Stark Black/Dark Slate) */
+      --color-accent-main: #0f172a;
+      --color-accent-hover: #1e293b;
+      --color-accent-text: #ffffff;
+
+      /* Secondary Actions (White/Light Slate) */
+      --color-secondary-main: #ffffff;
+      --color-secondary-hover: #f1f5f9;
+      --color-secondary-border: #cbd5e1;
+      --color-secondary-text: #0f172a;
+
+      /* Status Colors */
+      --color-danger: #ef4444;
+      --color-danger-hover: #dc2626;
+      --color-success: #10b981;
+
+      /* Shadows */
+      --shadow-subtle: 0 4px 12px rgba(15, 23, 42, 0.08);
+      --shadow-depth: 10px 0 30px rgba(15, 23, 42, 0.06);
+      --shadow-modal: 0 20px 40px -15px rgba(15, 23, 42, 0.1);
     }
 
     * {
@@ -30,8 +65,8 @@
     }
 
     body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--color-bg-page);
+      color: var(--color-text-main);
       overflow: hidden;
       width: 100vw;
       height: 100vh;
@@ -55,7 +90,7 @@
       overflow: hidden;
       cursor: grab;
       touch-action: none;
-      background-color: #f1f5f9;
+      background-color: var(--color-bg-ocean);
     }
 
     #map-container:active {
@@ -68,16 +103,16 @@
       display: block;
     }
 
-    /* Country path styling - Crisp Corporate Light Mode */
+    /* Country path styling */
     path {
-      fill: #ffffff;
-      stroke: #cbd5e1;
+      fill: var(--color-map-country-fill);
+      stroke: var(--color-map-country-stroke);
       stroke-width: 0.15px;
       transition: fill 0.25s ease, stroke 0.25s ease;
     }
 
     #World, #Ocean {
-      fill: #f1f5f9 !important;
+      fill: var(--color-bg-ocean) !important;
       stroke: none !important;
     }
 
@@ -86,8 +121,8 @@
     }
 
     .admin-mode g:hover path {
-      fill: #e2e8f0;
-      stroke: #94a3b8;
+      fill: var(--color-map-country-hover-fill);
+      stroke: var(--color-map-country-hover-stroke);
     }
 
     /* Floating Menu Toggle Button (Top-Left) */
@@ -98,47 +133,47 @@
       z-index: 1100;
       width: 38px;
       height: 38px;
-      background: #ffffff;
+      background: var(--color-bg-card);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--color-border-input);
       border-radius: 10px;
-      color: #0f172a;
+      color: var(--color-text-main);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      box-shadow: var(--shadow-subtle);
     }
     
     .menu-toggle-btn:hover {
-      background: #f1f5f9;
-      border-color: #94a3b8;
+      background: var(--color-secondary-hover);
+      border-color: var(--color-border-hover);
     }
 
     #right-menu-toggle {
       display: none !important;
     }
 
-    /* UNIFIED SIDEBAR LAYOUT - Light Corporate Style */
+    /* UNIFIED SIDEBAR LAYOUT */
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
       width: 320px;
       height: 100vh;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--color-bg-sidebar);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border-right: 1px solid var(--panel-border);
+      border-right: 1px solid var(--color-border-subtle);
       padding: 64px 16px 20px 16px;
       display: flex;
       flex-direction: column;
       gap: 14px;
       overflow-y: auto;
       z-index: 1000;
-      box-shadow: 10px 0 30px rgba(15, 23, 42, 0.06);
+      box-shadow: var(--shadow-depth);
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       scrollbar-width: thin;
       scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
@@ -167,10 +202,10 @@
       right: auto !important;
       bottom: auto !important;
       width: 100% !important;
-      background: #f8fafc;
+      background: var(--color-bg-panel);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--panel-border);
+      border: 1px solid var(--color-border-subtle);
       border-radius: 14px;
       padding: 14px;
       box-shadow: none;
@@ -200,34 +235,34 @@
       font-weight: 600;
       letter-spacing: 0.05em;
       margin-bottom: 5px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       text-transform: uppercase;
     }
 
     select, input {
       width: 100%;
       padding: 9px 12px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
+      background: var(--color-bg-input);
+      border: 1px solid var(--color-border-input);
       border-radius: 8px;
-      color: var(--text-color);
+      color: var(--color-text-main);
       font-size: 13px;
       outline: none;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     select:focus, input:focus {
-      border-color: var(--accent-color);
+      border-color: var(--color-accent-main);
       box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
     }
 
     button {
       width: 100%;
       padding: 9px 12px;
-      background: var(--accent-color);
+      background: var(--color-accent-main);
       border: none;
       border-radius: 8px;
-      color: #ffffff;
+      color: var(--color-accent-text);
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -239,24 +274,24 @@
     }
 
     button:hover {
-      background: var(--accent-hover);
+      background: var(--color-accent-hover);
     }
 
     button.secondary {
-      background: #ffffff;
-      color: var(--text-color);
-      border: 1px solid #cbd5e1;
+      background: var(--color-secondary-main);
+      color: var(--color-secondary-text);
+      border: 1px solid var(--color-secondary-border);
     }
 
     button.secondary:hover {
-      background: #f1f5f9;
+      background: var(--color-secondary-hover);
     }
 
     /* Assign Country Popup inside Sidebar */
     #assign-panel {
       display: none;
-      border: 1px solid var(--accent-color);
-      background: #ffffff;
+      border: 1px solid var(--color-accent-main);
+      background: var(--color-bg-card);
     }
     #assign-panel.active {
       display: block;
@@ -273,7 +308,7 @@
       width: 100%;
       margin-top: auto;
       padding-top: 12px;
-      border-top: 1px solid var(--panel-border);
+      border-top: 1px solid var(--color-border-subtle);
       z-index: 10;
     }
 
@@ -285,14 +320,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #ffffff;
-      color: #0f172a;
-      border: 1px solid #cbd5e1;
+      background: var(--color-secondary-main);
+      color: var(--color-secondary-text);
+      border: 1px solid var(--color-secondary-border);
       box-shadow: none;
     }
 
     .action-btn:hover {
-      background: #f1f5f9;
+      background: var(--color-secondary-hover);
     }
 
     /* Map Legend Container inside Sidebar */
@@ -303,10 +338,10 @@
       transform: none;
       width: 100%;
       max-width: none;
-      background: #f8fafc;
+      background: var(--color-bg-panel);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--panel-border);
+      border: 1px solid var(--color-border-subtle);
       border-radius: 12px;
       padding: 10px;
       box-shadow: none;
@@ -328,7 +363,7 @@
       gap: 8px;
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-color);
+      color: var(--color-text-main);
       width: 100%;
     }
 
@@ -365,7 +400,7 @@
       border-color: rgba(0, 0, 0, 0.3);
     }
     .preset-dot.selected {
-      border-color: #0f172a;
+      border-color: var(--color-accent-main);
       box-shadow: 0 0 8px rgba(15, 23, 42, 0.2);
     }
     .preset-dot.selected::after {
@@ -373,7 +408,7 @@
       position: absolute;
       width: 4px;
       height: 4px;
-      background: #0f172a;
+      background: var(--color-accent-main);
       border-radius: 50%;
       top: 50%;
       left: 50%;
@@ -383,14 +418,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: #ffffff;
-      border: 1px solid var(--panel-border);
+      background: var(--color-bg-input);
+      border: 1px solid var(--color-border-subtle);
       border-radius: 8px;
       padding: 2px 10px;
       height: 36px;
     }
     .hash-prefix {
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       font-weight: 600;
       font-size: 13px;
       user-select: none;
@@ -401,7 +436,7 @@
       padding: 0 !important;
       margin: 0 !important;
       height: 100% !important;
-      color: var(--text-color) !important;
+      color: var(--color-text-main) !important;
       font-size: 12px !important;
       width: 100% !important;
       outline: none !important;
@@ -437,12 +472,12 @@
       opacity: 1;
     }
     .confirm-modal-box {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border-subtle);
       border-radius: 16px;
       padding: 24px;
       width: 320px;
-      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1);
+      box-shadow: var(--shadow-modal);
       transform: scale(0.9);
       transition: transform 0.2s ease;
       text-align: center;
@@ -454,11 +489,11 @@
       font-size: 18px;
       font-weight: 800;
       margin-bottom: 12px;
-      color: var(--text-color);
+      color: var(--color-text-main);
     }
     .confirm-modal-box p {
       font-size: 14px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       margin-bottom: 24px;
       line-height: 1.5;
     }
@@ -470,12 +505,12 @@
       flex: 1;
     }
     button.danger {
-      background: var(--danger-color);
+      background: var(--color-danger);
       border: none;
       color: #ffffff;
     }
     button.danger:hover {
-      background: #dc2626;
+      background: var(--color-danger-hover);
     }
 
     #map-search-suggestions-list li {
@@ -487,14 +522,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: var(--text-color);
+      color: var(--color-text-main);
     }
     #map-search-suggestions-list li:hover {
       background: rgba(15, 23, 42, 0.05);
     }
     .suggestion-badge {
       font-size: 11px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -514,7 +549,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: #f1f5f9;
+      background: var(--color-bg-ocean);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -523,15 +558,15 @@
     }
 
     .login-card {
-      background: #ffffff;
+      background: var(--color-bg-card);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--color-border-subtle);
       padding: 32px;
       border-radius: 24px;
       width: 100%;
       max-width: 400px;
-      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.08);
+      box-shadow: var(--shadow-modal);
     }
 
     .login-header {
@@ -544,12 +579,12 @@
       font-weight: 800;
       letter-spacing: -0.025em;
       margin-bottom: 8px;
-      color: #0f172a;
+      color: var(--color-text-main);
     }
 
     .login-header p {
       font-size: 14px;
-      color: var(--text-muted);
+      color: var(--color-text-muted);
     }
 
     /* RESPONSIVE MOBILE & TABLET FULL-SCREEN SIDEBAR */
@@ -586,8 +621,8 @@
           <button type="submit">Giriş Yap</button>
         </form>
       </div>
-      <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 11px; letter-spacing: 0.05em; color: #94a3b8; font-weight: 500; font-family: 'Outfit', sans-serif;">
-        Design & Development: <span style="color: #475569; font-weight: 700;">GNNlabs</span>
+      <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 11px; letter-spacing: 0.05em; color: var(--color-text-muted); font-weight: 500; font-family: 'Outfit', sans-serif;">
+        Design & Development: <span style="color: var(--color-text-main); font-weight: 700;">GNNlabs</span>
       </div>
     </div>
 
@@ -617,13 +652,13 @@
       <!-- 1. Map Search Panel -->
       <div id="map-search-panel" class="overlay-panel">
         <div class="search-wrap" style="position: relative;">
-          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text-muted); pointer-events: none;">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--color-text-muted); pointer-events: none;">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1016.65 16.65z"/>
           </svg>
           <input type="text" id="map-search-input" placeholder="Haritada ülke ara (örn. Türkiye)..." style="padding-left: 36px; width: 100%;">
-          <button id="map-search-clear" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; padding: 0; background: transparent; color: var(--text-muted); border: none; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center;">&times;</button>
+          <button id="map-search-clear" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; padding: 0; background: transparent; color: var(--color-text-muted); border: none; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center;">&times;</button>
         </div>
-        <div id="map-search-suggestions" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 8px; border-top: 1px solid var(--panel-border); padding-top: 8px;">
+        <div id="map-search-suggestions" style="display: none; max-height: 200px; overflow-y: auto; margin-top: 8px; border-top: 1px solid var(--color-border-subtle); padding-top: 8px;">
           <ul id="map-search-suggestions-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px;">
           </ul>
         </div>
@@ -633,7 +668,7 @@
       <div id="control-panel" class="overlay-panel" style="display: none;">
         <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 12px;">
           <h3 id="role-title" style="font-size: 15px; font-weight: 800; margin: 0;">Yönetici Modu</h3>
-          <span id="user-display" class="user-badge" style="display: inline-block; max-width: 240px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 11px; padding: 2px 8px; background: rgba(15, 23, 42, 0.08); color: var(--accent-color); border-radius: 20px; font-weight: 600; letter-spacing: 0.05em;">admin</span>
+          <span id="user-display" class="user-badge" style="display: inline-block; max-width: 240px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-size: 11px; padding: 2px 8px; background: rgba(15, 23, 42, 0.08); color: var(--color-text-main); border-radius: 20px; font-weight: 600; letter-spacing: 0.05em;">admin</span>
         </div>
         
         <!-- Admin Controls -->
@@ -648,7 +683,7 @@
           <div class="form-group">
             <button id="toggle-change-pass-btn" class="secondary">Şifre Değiştir</button>
           </div>
-          <div id="change-pass-container" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+          <div id="change-pass-container" style="display: none; border-top: 1px solid var(--color-border-subtle); padding-top: 12px; margin-top: 12px;">
             <form id="change-pass-form">
               <div class="form-group">
                 <label for="old-pass">Mevcut Şifre</label>
@@ -664,7 +699,7 @@
         </div>
 
         <div class="form-group">
-          <button id="logout-btn" class="secondary" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3);">Çıkış Yap</button>
+          <button id="logout-btn" class="secondary" style="color: var(--color-danger); border-color: rgba(239, 68, 68, 0.3);">Çıkış Yap</button>
         </div>
       </div>
 
@@ -687,7 +722,7 @@
       <div id="reps-crud-panel" class="overlay-panel" style="display: none; width: 100%; overflow-y: auto;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <h3 style="font-size: 15px; font-weight: 800; margin: 0;">Temsilcileri Yönet</h3>
-          <button id="close-reps-btn" style="width: 24px; height: 24px; padding: 0; background: transparent; color: var(--text-muted); border: none; font-size: 18px; cursor: pointer;">&times;</button>
+          <button id="close-reps-btn" style="width: 24px; height: 24px; padding: 0; background: transparent; color: var(--color-text-muted); border: none; font-size: 18px; cursor: pointer;">&times;</button>
         </div>
 
         <div class="form-group">
@@ -698,7 +733,7 @@
           </select>
         </div>
 
-        <div id="rep-edit-section" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+        <div id="rep-edit-section" style="display: none; border-top: 1px solid var(--color-border-subtle); padding-top: 12px; margin-top: 12px;">
           <form id="edit-rep-form">
             <div class="form-group">
               <label for="edit-rep-code">Temsilci Kodu (Kullanıcı Adı)</label>
@@ -739,26 +774,26 @@
             </div>
             <div style="display: flex; gap: 8px; margin-bottom: 14px;">
               <button type="submit" style="flex: 1;">Değişiklikleri Kaydet</button>
-              <button type="button" id="delete-rep-btn" style="background: #c0392b; color: #ffffff; border: none; width: auto; padding: 0 12px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 400; line-height: 1; height: 36px;" title="Temsilciyi Sil">&#x2715;</button>
+              <button type="button" id="delete-rep-btn" style="background: var(--color-danger); color: #ffffff; border: none; width: auto; padding: 0 12px; display: flex; align-items: center; justify-content: center; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: 400; line-height: 1; height: 36px;" title="Temsilciyi Sil">&#x2715;</button>
             </div>
           </form>
 
-          <div style="border-top: 1px solid var(--panel-border); padding-top: 12px;">
-            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted);">ATANAN ÜLKELER</h4>
+          <div style="border-top: 1px solid var(--color-border-subtle); padding-top: 12px;">
+            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--color-text-muted);">ATANAN ÜLKELER</h4>
             <div style="display: flex; gap: 8px; margin-bottom: 10px;">
               <select id="admin-add-country-select" style="flex: 1; padding: 6px 10px; font-size: 12px;">
                 <option value="">-- Ülke Seçin --</option>
               </select>
-              <button id="admin-add-country-btn" style="width: 34px; height: 34px; padding: 0; background: var(--success-color); border: none; border-radius: 8px; font-size: 16px; color: white; cursor: pointer;" title="Assign Country">+</button>
+              <button id="admin-add-country-btn" style="width: 34px; height: 34px; padding: 0; background: var(--color-success); border: none; border-radius: 8px; font-size: 16px; color: white; cursor: pointer;" title="Assign Country">+</button>
             </div>
             <div id="rep-assigned-list" style="max-height: 140px; overflow-y: auto;">
             </div>
           </div>
         </div>
 
-        <div id="rep-create-section" style="display: none; border-top: 1px solid var(--panel-border); padding-top: 12px; margin-top: 12px;">
+        <div id="rep-create-section" style="display: none; border-top: 1px solid var(--color-border-subtle); padding-top: 12px; margin-top: 12px;">
           <form id="create-rep-form">
-            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--text-muted);">TEMSİLCİ EKLE</h4>
+            <h4 style="font-size: 12px; font-weight: 600; margin-bottom: 10px; color: var(--color-text-muted);">TEMSİLCİ EKLE</h4>
             <div class="form-group">
               <label for="rep-code">Temsilci Kodu</label>
               <input type="text" id="rep-code" required placeholder="Örn. temsilci_tr">
@@ -805,7 +840,7 @@
       <div id="assign-panel" class="overlay-panel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <h3 id="country-title" style="font-size: 14px; font-weight: 800;">Ülke Adı</h3>
-          <button id="close-assign-btn" style="width: 22px; height: 22px; padding: 0; background: transparent; color: var(--text-muted); border-radius: 50%; border: none; font-size: 16px; cursor: pointer;">&times;</button>
+          <button id="close-assign-btn" style="width: 22px; height: 22px; padding: 0; background: transparent; color: var(--color-text-muted); border-radius: 50%; border: none; font-size: 16px; cursor: pointer;">&times;</button>
         </div>
         <div class="form-group">
           <label for="rep-select">Temsilci Ata</label>
